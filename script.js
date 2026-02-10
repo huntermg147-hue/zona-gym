@@ -20,28 +20,172 @@ const macrosByGoal = {
 
 const foodByGoal = {
   lose: [
-    { name: 'Pechuga de pollo', portion: '150 g', protein: 46, carbs: 0, fats: 5 },
-    { name: 'Yogur griego natural', portion: '170 g', protein: 17, carbs: 6, fats: 4 },
-    { name: 'Avena', portion: '50 g', protein: 8, carbs: 30, fats: 4 },
-    { name: 'Salmón', portion: '140 g', protein: 31, carbs: 0, fats: 14 },
-    { name: 'Quinoa cocida', portion: '120 g', protein: 5, carbs: 25, fats: 2 },
-    { name: 'Almendras', portion: '25 g', protein: 5, carbs: 5, fats: 13 }
+    {
+      name: 'Pollo guisado + arroz + ensalada',
+      portion: '150 g pollo + 120 g arroz cocido',
+      protein: 41,
+      carbs: 36,
+      fats: 10,
+      budget: 'Económico',
+      region: 'Costa / Sierra'
+    },
+    {
+      name: 'Tortilla de 2 huevos + papa sancochada',
+      portion: '2 huevos + 150 g papa',
+      protein: 14,
+      carbs: 30,
+      fats: 10,
+      budget: 'Económico',
+      region: 'Todo el Perú'
+    },
+    {
+      name: 'Pescado a la plancha + camote',
+      portion: '140 g pescado + 120 g camote',
+      protein: 30,
+      carbs: 27,
+      fats: 6,
+      budget: 'Medio',
+      region: 'Costa'
+    },
+    {
+      name: 'Lentejas guisadas con huevo',
+      portion: '180 g lentejas + 1 huevo',
+      protein: 18,
+      carbs: 34,
+      fats: 7,
+      budget: 'Muy económico',
+      region: 'Sierra / Selva'
+    },
+    {
+      name: 'Aguadito de pollo (sin piel)',
+      portion: '1 plato mediano',
+      protein: 24,
+      carbs: 22,
+      fats: 8,
+      budget: 'Económico',
+      region: 'Costa'
+    },
+    {
+      name: 'Quinua atamalada + queso fresco',
+      portion: '200 ml quinua + 40 g queso',
+      protein: 12,
+      carbs: 30,
+      fats: 6,
+      budget: 'Económico',
+      region: 'Sierra'
+    }
   ],
   maintain: [
-    { name: 'Huevos enteros', portion: '2 unidades', protein: 12, carbs: 1, fats: 10 },
-    { name: 'Carne magra', portion: '150 g', protein: 39, carbs: 0, fats: 9 },
-    { name: 'Arroz integral cocido', portion: '150 g', protein: 4, carbs: 37, fats: 1 },
-    { name: 'Pan integral', portion: '2 rebanadas', protein: 7, carbs: 24, fats: 2 },
-    { name: 'Queso fresco', portion: '80 g', protein: 14, carbs: 3, fats: 8 },
-    { name: 'Frutas mixtas', portion: '150 g', protein: 1, carbs: 20, fats: 0 }
+    {
+      name: 'Seco de pollo con frejoles',
+      portion: '150 g pollo + 120 g frejol',
+      protein: 38,
+      carbs: 30,
+      fats: 12,
+      budget: 'Económico',
+      region: 'Costa / Norte'
+    },
+    {
+      name: 'Chaufa casero de pollo',
+      portion: '1 plato (220 g)',
+      protein: 26,
+      carbs: 45,
+      fats: 12,
+      budget: 'Económico',
+      region: 'Urbano nacional'
+    },
+    {
+      name: 'Tarwi + cancha + queso',
+      portion: '100 g tarwi + 20 g cancha + 40 g queso',
+      protein: 22,
+      carbs: 17,
+      fats: 12,
+      budget: 'Muy económico',
+      region: 'Sierra'
+    },
+    {
+      name: 'Cau cau de pollo con papa',
+      portion: '1 plato mediano',
+      protein: 24,
+      carbs: 33,
+      fats: 11,
+      budget: 'Económico',
+      region: 'Costa'
+    },
+    {
+      name: 'Atún con yuca sancochada',
+      portion: '1 lata atún + 150 g yuca',
+      protein: 28,
+      carbs: 41,
+      fats: 8,
+      budget: 'Económico',
+      region: 'Selva / Costa'
+    },
+    {
+      name: 'Sopa de quinua con huevo',
+      portion: '1 plato mediano',
+      protein: 16,
+      carbs: 26,
+      fats: 7,
+      budget: 'Muy económico',
+      region: 'Sierra / Provincias'
+    }
   ],
   gain: [
-    { name: 'Avena', portion: '80 g', protein: 13, carbs: 49, fats: 6 },
-    { name: 'Leche descremada', portion: '300 ml', protein: 10, carbs: 15, fats: 1 },
-    { name: 'Pasta integral cocida', portion: '180 g', protein: 10, carbs: 55, fats: 2 },
-    { name: 'Pechuga de pavo', portion: '170 g', protein: 49, carbs: 0, fats: 4 },
-    { name: 'Mantequilla de maní', portion: '30 g', protein: 8, carbs: 6, fats: 15 },
-    { name: 'Nueces', portion: '30 g', protein: 5, carbs: 4, fats: 19 }
+    {
+      name: 'Tallarín rojo con pollo',
+      portion: '240 g tallarín + 150 g pollo',
+      protein: 42,
+      carbs: 68,
+      fats: 16,
+      budget: 'Económico',
+      region: 'Todo el Perú'
+    },
+    {
+      name: 'Arroz con huevo + palta',
+      portion: '200 g arroz + 2 huevos + 50 g palta',
+      protein: 19,
+      carbs: 58,
+      fats: 19,
+      budget: 'Muy económico',
+      region: 'Todo el Perú'
+    },
+    {
+      name: 'Puré de papa + bistec',
+      portion: '180 g puré + 150 g carne',
+      protein: 34,
+      carbs: 38,
+      fats: 18,
+      budget: 'Medio',
+      region: 'Costa / Sierra'
+    },
+    {
+      name: 'Juane de pollo',
+      portion: '1 unidad mediana',
+      protein: 24,
+      carbs: 52,
+      fats: 15,
+      budget: 'Económico',
+      region: 'Selva'
+    },
+    {
+      name: 'Mazamorra de avena + leche + maní',
+      portion: '1 vaso grande (350 ml)',
+      protein: 14,
+      carbs: 46,
+      fats: 12,
+      budget: 'Muy económico',
+      region: 'Provincias'
+    },
+    {
+      name: 'Frejoles + arroz + huevo',
+      portion: '150 g frejol + 130 g arroz + 1 huevo',
+      protein: 24,
+      carbs: 61,
+      fats: 11,
+      budget: 'Muy económico',
+      region: 'Todo el Perú'
+    }
   ]
 };
 
@@ -152,7 +296,7 @@ function renderSummary(data, calories, macros, projectionData) {
         <span class="value">${projectionData.monthly >= 0 ? '+' : ''}${projectionData.monthly} kg</span>
       </div>
     </div>
-    <span class="tag">Los resultados son orientativos y pueden variar según adherencia y descanso.</span>
+    <span class="tag">Plan enfocado en alimentos accesibles en Perú (costa, sierra y selva).</span>
   `;
 
   macroBars.innerHTML = '';
@@ -197,6 +341,10 @@ function renderFoods(goal) {
         <li>Carbohidratos: ${food.carbs} g</li>
         <li>Grasas: ${food.fats} g</li>
       </ul>
+      <div class="food-meta">
+        <span class="pill">Costo: ${food.budget}</span>
+        <span class="pill">Zona: ${food.region}</span>
+      </div>
     `;
     foods.appendChild(item);
   });
