@@ -6,6 +6,23 @@ const projection = document.getElementById('projection');
 const foods = document.getElementById('foods');
 const routine = document.getElementById('routine');
 
+const registerForm = document.getElementById('register-form');
+const registerError = document.getElementById('register-error');
+const serviceType = document.getElementById('serviceType');
+const startDate = document.getElementById('startDate');
+const endDate = document.getElementById('endDate');
+const basePrice = document.getElementById('basePrice');
+const advancePaid = document.getElementById('advancePaid');
+const totalPay = document.getElementById('totalPay');
+const balance = document.getElementById('balance');
+const previewBtn = document.getElementById('preview-btn');
+const summaryModal = document.getElementById('summary-modal');
+const summaryContent = document.getElementById('summary-content');
+const closeModalBtn = document.getElementById('close-modal-btn');
+
+const tabButtons = document.querySelectorAll('.tab-btn');
+const appSections = document.querySelectorAll('.app-section');
+
 const goalText = {
   lose: 'Bajar de peso',
   maintain: 'Mantener peso',
@@ -18,174 +35,38 @@ const macrosByGoal = {
   gain: { protein: 0.25, carbs: 0.5, fats: 0.25 }
 };
 
+const serviceCatalog = {
+  rutina: { label: 'Rutina', price: 5, period: 'daily' },
+  maquinas: { label: 'Máquinas', price: 50, period: 'monthly' },
+  bailes: { label: 'Bailes', price: 50, period: 'monthly' },
+  jumping: { label: 'Jumping', price: 50, period: 'monthly' },
+  '3servicios': { label: '3 servicios', price: 140, period: 'monthly' }
+};
+
 const foodByGoal = {
   lose: [
-    {
-      name: 'Pollo guisado + arroz + ensalada',
-      portion: '150 g pollo + 120 g arroz cocido',
-      protein: 41,
-      carbs: 36,
-      fats: 10,
-      budget: 'Económico',
-      region: 'Costa / Sierra'
-    },
-    {
-      name: 'Tortilla de 2 huevos + papa sancochada',
-      portion: '2 huevos + 150 g papa',
-      protein: 14,
-      carbs: 30,
-      fats: 10,
-      budget: 'Económico',
-      region: 'Todo el Perú'
-    },
-    {
-      name: 'Pescado a la plancha + camote',
-      portion: '140 g pescado + 120 g camote',
-      protein: 30,
-      carbs: 27,
-      fats: 6,
-      budget: 'Medio',
-      region: 'Costa'
-    },
-    {
-      name: 'Lentejas guisadas con huevo',
-      portion: '180 g lentejas + 1 huevo',
-      protein: 18,
-      carbs: 34,
-      fats: 7,
-      budget: 'Muy económico',
-      region: 'Sierra / Selva'
-    },
-    {
-      name: 'Aguadito de pollo (sin piel)',
-      portion: '1 plato mediano',
-      protein: 24,
-      carbs: 22,
-      fats: 8,
-      budget: 'Económico',
-      region: 'Costa'
-    },
-    {
-      name: 'Quinua atamalada + queso fresco',
-      portion: '200 ml quinua + 40 g queso',
-      protein: 12,
-      carbs: 30,
-      fats: 6,
-      budget: 'Económico',
-      region: 'Sierra'
-    }
+    { name: 'Pollo guisado + arroz + ensalada', portion: '150 g pollo + 120 g arroz cocido', protein: 41, carbs: 36, fats: 10, budget: 'Económico', region: 'Costa / Sierra' },
+    { name: 'Tortilla de 2 huevos + papa sancochada', portion: '2 huevos + 150 g papa', protein: 14, carbs: 30, fats: 10, budget: 'Económico', region: 'Todo el Perú' },
+    { name: 'Pescado a la plancha + camote', portion: '140 g pescado + 120 g camote', protein: 30, carbs: 27, fats: 6, budget: 'Medio', region: 'Costa' },
+    { name: 'Lentejas guisadas con huevo', portion: '180 g lentejas + 1 huevo', protein: 18, carbs: 34, fats: 7, budget: 'Muy económico', region: 'Sierra / Selva' },
+    { name: 'Aguadito de pollo (sin piel)', portion: '1 plato mediano', protein: 24, carbs: 22, fats: 8, budget: 'Económico', region: 'Costa' },
+    { name: 'Quinua atamalada + queso fresco', portion: '200 ml quinua + 40 g queso', protein: 12, carbs: 30, fats: 6, budget: 'Económico', region: 'Sierra' }
   ],
   maintain: [
-    {
-      name: 'Seco de pollo con frejoles',
-      portion: '150 g pollo + 120 g frejol',
-      protein: 38,
-      carbs: 30,
-      fats: 12,
-      budget: 'Económico',
-      region: 'Costa / Norte'
-    },
-    {
-      name: 'Chaufa casero de pollo',
-      portion: '1 plato (220 g)',
-      protein: 26,
-      carbs: 45,
-      fats: 12,
-      budget: 'Económico',
-      region: 'Urbano nacional'
-    },
-    {
-      name: 'Tarwi + cancha + queso',
-      portion: '100 g tarwi + 20 g cancha + 40 g queso',
-      protein: 22,
-      carbs: 17,
-      fats: 12,
-      budget: 'Muy económico',
-      region: 'Sierra'
-    },
-    {
-      name: 'Cau cau de pollo con papa',
-      portion: '1 plato mediano',
-      protein: 24,
-      carbs: 33,
-      fats: 11,
-      budget: 'Económico',
-      region: 'Costa'
-    },
-    {
-      name: 'Atún con yuca sancochada',
-      portion: '1 lata atún + 150 g yuca',
-      protein: 28,
-      carbs: 41,
-      fats: 8,
-      budget: 'Económico',
-      region: 'Selva / Costa'
-    },
-    {
-      name: 'Sopa de quinua con huevo',
-      portion: '1 plato mediano',
-      protein: 16,
-      carbs: 26,
-      fats: 7,
-      budget: 'Muy económico',
-      region: 'Sierra / Provincias'
-    }
+    { name: 'Seco de pollo con frejoles', portion: '150 g pollo + 120 g frejol', protein: 38, carbs: 30, fats: 12, budget: 'Económico', region: 'Costa / Norte' },
+    { name: 'Chaufa casero de pollo', portion: '1 plato (220 g)', protein: 26, carbs: 45, fats: 12, budget: 'Económico', region: 'Urbano nacional' },
+    { name: 'Tarwi + cancha + queso', portion: '100 g tarwi + 20 g cancha + 40 g queso', protein: 22, carbs: 17, fats: 12, budget: 'Muy económico', region: 'Sierra' },
+    { name: 'Cau cau de pollo con papa', portion: '1 plato mediano', protein: 24, carbs: 33, fats: 11, budget: 'Económico', region: 'Costa' },
+    { name: 'Atún con yuca sancochada', portion: '1 lata atún + 150 g yuca', protein: 28, carbs: 41, fats: 8, budget: 'Económico', region: 'Selva / Costa' },
+    { name: 'Sopa de quinua con huevo', portion: '1 plato mediano', protein: 16, carbs: 26, fats: 7, budget: 'Muy económico', region: 'Sierra / Provincias' }
   ],
   gain: [
-    {
-      name: 'Tallarín rojo con pollo',
-      portion: '240 g tallarín + 150 g pollo',
-      protein: 42,
-      carbs: 68,
-      fats: 16,
-      budget: 'Económico',
-      region: 'Todo el Perú'
-    },
-    {
-      name: 'Arroz con huevo + palta',
-      portion: '200 g arroz + 2 huevos + 50 g palta',
-      protein: 19,
-      carbs: 58,
-      fats: 19,
-      budget: 'Muy económico',
-      region: 'Todo el Perú'
-    },
-    {
-      name: 'Puré de papa + bistec',
-      portion: '180 g puré + 150 g carne',
-      protein: 34,
-      carbs: 38,
-      fats: 18,
-      budget: 'Medio',
-      region: 'Costa / Sierra'
-    },
-    {
-      name: 'Juane de pollo',
-      portion: '1 unidad mediana',
-      protein: 24,
-      carbs: 52,
-      fats: 15,
-      budget: 'Económico',
-      region: 'Selva'
-    },
-    {
-      name: 'Mazamorra de avena + leche + maní',
-      portion: '1 vaso grande (350 ml)',
-      protein: 14,
-      carbs: 46,
-      fats: 12,
-      budget: 'Muy económico',
-      region: 'Provincias'
-    },
-    {
-      name: 'Frejoles + arroz + huevo',
-      portion: '150 g frejol + 130 g arroz + 1 huevo',
-      protein: 24,
-      carbs: 61,
-      fats: 11,
-      budget: 'Muy económico',
-      region: 'Todo el Perú'
-    }
+    { name: 'Tallarín rojo con pollo', portion: '240 g tallarín + 150 g pollo', protein: 42, carbs: 68, fats: 16, budget: 'Económico', region: 'Todo el Perú' },
+    { name: 'Arroz con huevo + palta', portion: '200 g arroz + 2 huevos + 50 g palta', protein: 19, carbs: 58, fats: 19, budget: 'Muy económico', region: 'Todo el Perú' },
+    { name: 'Puré de papa + bistec', portion: '180 g puré + 150 g carne', protein: 34, carbs: 38, fats: 18, budget: 'Medio', region: 'Costa / Sierra' },
+    { name: 'Juane de pollo', portion: '1 unidad mediana', protein: 24, carbs: 52, fats: 15, budget: 'Económico', region: 'Selva' },
+    { name: 'Mazamorra de avena + leche + maní', portion: '1 vaso grande (350 ml)', protein: 14, carbs: 46, fats: 12, budget: 'Muy económico', region: 'Provincias' },
+    { name: 'Frejoles + arroz + huevo', portion: '150 g frejol + 130 g arroz + 1 huevo', protein: 24, carbs: 61, fats: 11, budget: 'Muy económico', region: 'Todo el Perú' }
   ]
 };
 
@@ -365,6 +246,109 @@ function renderRoutine(goal) {
   });
 }
 
+/* -------------------------------
+ * Registro: utilidades de cálculo
+ * ------------------------------- */
+function calculateEndDate(serviceCode, dateISO) {
+  if (!serviceCode || !dateISO) return '';
+  const service = serviceCatalog[serviceCode];
+  const date = new Date(`${dateISO}T00:00:00`);
+
+  if (service.period === 'daily') {
+    return dateISO;
+  }
+
+  date.setMonth(date.getMonth() + 1);
+  return date.toISOString().split('T')[0];
+}
+
+function calculatePaymentFields() {
+  const selected = serviceCatalog[serviceType.value];
+  const price = selected ? selected.price : 0;
+  const advance = Number(advancePaid.value || 0);
+
+  basePrice.value = price;
+  totalPay.value = price;
+  balance.value = Math.max(price - advance, 0).toFixed(2);
+}
+
+function updateEndDateField() {
+  endDate.value = calculateEndDate(serviceType.value, startDate.value);
+}
+
+/* ------------------------------------
+ * Registro: validación y resumen previo
+ * ------------------------------------ */
+function validateRegisterForm() {
+  const errors = [];
+  const fullNameValue = document.getElementById('fullName').value.trim();
+  const dniValue = document.getElementById('dni').value.trim();
+  const advance = Number(advancePaid.value || 0);
+  const selected = serviceCatalog[serviceType.value];
+
+  if (!fullNameValue) errors.push('El nombre y apellido es obligatorio.');
+  if (!dniValue) errors.push('El DNI o identificación es obligatorio.');
+  if (!startDate.value) errors.push('La fecha de inscripción es obligatoria.');
+  if (!serviceType.value) errors.push('Selecciona un tipo de servicio.');
+  if (Number.isNaN(advance) || advance < 0) errors.push('El adelanto debe ser un número válido mayor o igual a 0.');
+  if (selected && advance > selected.price) errors.push('El adelanto no puede ser mayor que el total a pagar.');
+
+  return errors;
+}
+
+function renderRegisterSummary() {
+  const service = serviceCatalog[serviceType.value];
+  const fullNameValue = document.getElementById('fullName').value.trim();
+  const dniValue = document.getElementById('dni').value.trim();
+
+  summaryContent.innerHTML = `
+    <p><strong>Cliente:</strong> ${fullNameValue}</p>
+    <p><strong>DNI/ID:</strong> ${dniValue}</p>
+    <p><strong>Servicio:</strong> ${service.label}</p>
+    <p><strong>Fecha de ingreso:</strong> ${startDate.value}</p>
+    <p><strong>Fecha de término:</strong> ${endDate.value || 'No calculada'}</p>
+    <p><strong>Precio base:</strong> S/ ${Number(basePrice.value || 0).toFixed(2)}</p>
+    <p><strong>Adelanto:</strong> S/ ${Number(advancePaid.value || 0).toFixed(2)}</p>
+    <p><strong>Total:</strong> S/ ${Number(totalPay.value || 0).toFixed(2)}</p>
+    <p><strong>Saldo:</strong> S/ ${Number(balance.value || 0).toFixed(2)}</p>
+  `;
+}
+
+function showRegisterError(messages) {
+  if (messages.length === 0) {
+    registerError.classList.add('hidden');
+    registerError.textContent = '';
+    return;
+  }
+
+  registerError.classList.remove('hidden');
+  registerError.textContent = messages.join(' ');
+}
+
+function openModal() {
+  summaryModal.classList.remove('hidden');
+}
+
+function closeModal() {
+  summaryModal.classList.add('hidden');
+}
+
+/* ------------------------------------
+ * Navegación por secciones (tabs)
+ * ------------------------------------ */
+function activateSection(sectionId) {
+  appSections.forEach((section) => {
+    section.classList.toggle('hidden', section.id !== sectionId);
+  });
+
+  tabButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.target === sectionId);
+  });
+}
+
+/* ------------------------------------
+ * Eventos: plan nutricional
+ * ------------------------------------ */
 form.addEventListener('submit', (event) => {
   event.preventDefault();
 
@@ -378,9 +362,7 @@ form.addEventListener('submit', (event) => {
     goal: document.getElementById('goal').value
   };
 
-  if (!data.name) {
-    return;
-  }
+  if (!data.name) return;
 
   const calories = calculateCalories(data);
   const macros = macroSplit(calories.targetCalories, data.goal);
@@ -393,3 +375,52 @@ form.addEventListener('submit', (event) => {
   results.classList.remove('hidden');
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
+
+/* ------------------------------------
+ * Eventos: registro de gym
+ * ------------------------------------ */
+serviceType.addEventListener('change', () => {
+  updateEndDateField();
+  calculatePaymentFields();
+});
+
+startDate.addEventListener('change', updateEndDateField);
+advancePaid.addEventListener('input', calculatePaymentFields);
+
+previewBtn.addEventListener('click', () => {
+  const errors = validateRegisterForm();
+  showRegisterError(errors);
+
+  if (errors.length > 0) return;
+
+  renderRegisterSummary();
+  openModal();
+});
+
+registerForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const errors = validateRegisterForm();
+  showRegisterError(errors);
+
+  if (errors.length > 0) return;
+
+  renderRegisterSummary();
+  openModal();
+});
+
+closeModalBtn.addEventListener('click', closeModal);
+summaryModal.addEventListener('click', (event) => {
+  if (event.target === summaryModal) closeModal();
+});
+
+/* ------------------------------------
+ * Eventos: tabs y estado inicial
+ * ------------------------------------ */
+tabButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    activateSection(button.dataset.target);
+  });
+});
+
+calculatePaymentFields();

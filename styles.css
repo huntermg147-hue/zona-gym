@@ -72,6 +72,28 @@ p {
   margin: 0;
 }
 
+.section-tabs {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tab-btn {
+  border: 1px solid rgba(115, 224, 255, 0.35);
+  background: rgba(11, 21, 42, 0.85);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: #001833;
+  background: linear-gradient(90deg, #73e0ff, #00d0aa);
+}
+
 .card {
   margin-top: 1rem;
   background: linear-gradient(165deg, rgba(16, 24, 45, 0.96), rgba(20, 31, 55, 0.96));
@@ -141,6 +163,21 @@ button {
 
 button:hover {
   filter: brightness(1.06);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.error-message {
+  margin-top: 0.8rem;
+  color: #ffd3dc;
+  border: 1px solid rgba(255, 106, 136, 0.55);
+  background: rgba(255, 106, 136, 0.14);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
 }
 
 .muted {
@@ -283,6 +320,25 @@ button:hover {
   border-radius: 999px;
   background: rgba(255, 106, 136, 0.2);
   border: 1px solid rgba(255, 106, 136, 0.45);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-content {
+  width: min(580px, 95vw);
+}
+
+.modal-grid {
+  display: grid;
+  gap: 0.35rem;
 }
 
 @media (max-width: 640px) {
