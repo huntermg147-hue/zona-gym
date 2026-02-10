@@ -44,8 +44,23 @@ const routineByGoal = {
 };
 
 const byId = (id) => document.getElementById(id);
-const getStored = (k) => JSON.parse(localStorage.getItem(k) || '[]');
+const getStored = (k) => {
+  try {
+    return JSON.parse(localStorage.getItem(k) || '[]');
+  } catch {
+    return [];
+  }
+};
 const setStored = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `id-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+}
+
 
 // Tabs
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -189,7 +204,7 @@ function currentRegisterData() {
   const paid = Number(byId('advancePaid').value || 0);
   const balance = Math.max(total - paid, 0);
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     fullName: byId('fullName').value.trim(),
     dni: byId('dni').value.trim(),
     serviceKey,

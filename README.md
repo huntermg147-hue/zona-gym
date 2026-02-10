@@ -46,3 +46,10 @@ Abrir:
 ```text
 http://localhost:8000
 ```
+
+
+## Persistencia de datos
+
+- Los registros (activos, pendientes y ventas) se guardan en `localStorage` del navegador.
+- Si cierras y abres la app otro día en el mismo navegador/equipo, los datos se mantienen.
+- Si borras datos del navegador, se perderán.
