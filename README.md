@@ -1,12 +1,14 @@
 # Zona Gym Pro
 
-Aplicación web con 3 secciones:
+Sistema web para gimnasio con **5 secciones**:
 
 1. Plan nutricional + rutina.
-2. Registro de gym con promociones y alertas de vencimiento.
+2. Registro de gym.
 3. Ventas de productos.
+4. Pagos pendientes.
+5. Búsqueda de usuario.
 
-## Registro de gym (precios corregidos)
+## Precios y promociones
 
 ### Precio regular (1 persona)
 - Solo máquinas: S/ 50
@@ -19,21 +21,28 @@ Aplicación web con 3 secciones:
 - Máquina + baile: S/ 50
 - Baile + jumping: S/ 50
 - Los 3 servicios: S/ 60
-- Solo máquinas y solo bailes mantienen S/ 50
+- Solo máquinas y solo bailes se mantienen en S/ 50
 
-## Funcionalidades clave
+## Funcionalidades agregadas
 
-- El sistema pregunta si es 1 persona o 2+ para aplicar promociones.
-- Calcula automáticamente precio base, total y saldo.
-- Calcula fecha de término (mensual: +1 mes).
-- Guarda registros de personas en almacenamiento local del navegador.
-- Muestra alertas cuando faltan 3 días o menos para vencimiento.
-- Permite registrar ventas de productos calculando precio final (`unidades x precio unitario`) y guarda historial.
+- Botón para borrar registros de gym **por persona** (no borra todo).
+- Sección de pagos pendientes para usuarios con adelanto parcial.
+- Posibilidad de agregar pagos adicionales; cuando el saldo llega a 0:
+  - sale de pagos pendientes,
+  - pasa automáticamente a registros activos,
+  - evitando duplicados.
+- Alertas de vencimiento con 3 días de anticipación.
+- Sección de búsqueda para ver datos completos del usuario, vencimiento y estado de pago.
+- Módulo de ventas con cálculo automático de precio final (`unidades x precio unitario`).
 
-## Cómo ejecutar
+## Ejecución
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Abrir `http://localhost:8000`.
+Abrir:
+
+```text
+http://localhost:8000
+```

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zona Gym Pro - Nutrición, Registro y Ventas</title>
+    <title>Zona Gym Pro - Sistema completo</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,15 +11,15 @@
       <section class="hero">
         <p class="badge">PLANIFICADOR FITNESS</p>
         <h1>Zona Gym Pro</h1>
-        <p>
-          Administra 3 módulos: plan nutricional, registro de inscripciones y ventas de productos.
-        </p>
+        <p>Sistema con 5 secciones: plan nutricional, registro, ventas, pagos pendientes y búsqueda de usuarios.</p>
       </section>
 
       <nav class="section-tabs" aria-label="Secciones principales">
         <button class="tab-btn active" type="button" data-target="nutrition-section">Plan nutricional</button>
         <button class="tab-btn" type="button" data-target="register-section">Registro de gym</button>
-        <button class="tab-btn" type="button" data-target="sales-section">Ventas de productos</button>
+        <button class="tab-btn" type="button" data-target="sales-section">Ventas</button>
+        <button class="tab-btn" type="button" data-target="pending-section">Pagos pendientes</button>
+        <button class="tab-btn" type="button" data-target="search-section">Buscar usuario</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -65,31 +65,21 @@
         <section id="results" class="hidden" aria-live="polite">
           <div class="card result-header" id="summary"></div>
           <div class="result-grid">
-            <article class="card"><h3>Distribución de macronutrientes</h3><div id="macro-bars" class="stack"></div></article>
-            <article class="card"><h3>Proyección del objetivo</h3><div id="projection" class="projection"></div></article>
+            <article class="card"><h3>Macros</h3><div id="macro-bars" class="stack"></div></article>
+            <article class="card"><h3>Proyección</h3><div id="projection" class="projection"></div></article>
           </div>
-          <article class="card">
-            <h3>Alimentos recomendados por porción</h3>
-            <p class="muted">Incluye porción, macros y opciones económicas para público peruano/provincias.</p>
-            <div id="foods" class="food-grid"></div>
-          </article>
-          <article class="card">
-            <h3>Rutina sugerida (Lunes a Sábado)</h3>
-            <p class="muted">Puedes cambiar los días según disponibilidad.</p>
-            <div id="routine" class="routine-grid"></div>
-          </article>
+          <article class="card"><h3>Comidas</h3><div id="foods" class="food-grid"></div></article>
+          <article class="card"><h3>Rutina sugerida</h3><div id="routine" class="routine-grid"></div></article>
         </section>
       </section>
 
       <section id="register-section" class="app-section hidden">
         <section class="card form-card">
           <h2>Registro de inscripciones</h2>
-          <p class="muted">El sistema calcula precios según servicio y cantidad de personas (1 o 2+).</p>
-
           <form id="register-form" novalidate>
             <div class="grid">
-              <label>Nombre y apellido<input type="text" id="fullName" placeholder="Ej: María Quispe" required /></label>
-              <label>DNI o identificación<input type="text" id="dni" placeholder="Ej: 12345678" required /></label>
+              <label>Nombre y apellido<input type="text" id="fullName" required /></label>
+              <label>DNI o identificación<input type="text" id="dni" required /></label>
               <label>Fecha de inscripción<input type="date" id="startDate" required /></label>
               <label>
                 Tipo de servicio
@@ -115,7 +105,6 @@
               <label>Total a pagar (S/)<input type="number" id="totalPay" readonly /></label>
               <label>Saldo (S/)<input type="number" id="balance" readonly /></label>
             </div>
-
             <p id="register-error" class="error-message hidden" role="alert"></p>
             <div class="actions">
               <button type="button" id="preview-btn">Ver resumen</button>
@@ -130,12 +119,12 @@
         </section>
 
         <section class="card">
-          <h3>Personas registradas</h3>
+          <h3>Personas registradas (pagado completo)</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th>
+                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Acción</th>
                 </tr>
               </thead>
               <tbody id="register-table-body"></tbody>
@@ -167,6 +156,33 @@
               <tbody id="sales-table-body"></tbody>
             </table>
           </div>
+        </section>
+      </section>
+
+      <section id="pending-section" class="app-section hidden">
+        <section class="card">
+          <h2>Pagos pendientes</h2>
+          <p class="muted">Aquí aparecen personas con adelanto parcial. Si completan el pago pasan automáticamente a Registro de gym.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Agregar pago</th><th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="pending-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="search-section" class="app-section hidden">
+        <section class="card form-card">
+          <h2>Búsqueda de usuario</h2>
+          <div class="grid">
+            <label>Buscar por nombre o DNI<input type="text" id="searchInput" placeholder="Ej: María o 12345678" /></label>
+          </div>
+          <div id="search-results" class="list-stack muted" style="margin-top: 1rem;">Escribe un criterio para buscar.</div>
         </section>
       </section>
     </main>

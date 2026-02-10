@@ -386,3 +386,21 @@ th {
   padding: 0.5rem 0.6rem;
   color: #ffe5b2;
 }
+
+
+.mini-btn {
+  margin-top: 0;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.mini-btn.danger {
+  background: linear-gradient(90deg, #ff9db0, #ff6a88);
+}
+
+.pay-input {
+  width: 110px;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+}
