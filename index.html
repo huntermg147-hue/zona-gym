@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zona Gym Pro - Nutrición y Registro</title>
+    <title>Zona Gym Pro - Nutrición, Registro y Ventas</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,14 +12,14 @@
         <p class="badge">PLANIFICADOR FITNESS</p>
         <h1>Zona Gym Pro</h1>
         <p>
-          Administra dos módulos: plan nutricional/rutina y registro de inscripciones con cálculo
-          automático de precios y saldo.
+          Administra 3 módulos: plan nutricional, registro de inscripciones y ventas de productos.
         </p>
       </section>
 
       <nav class="section-tabs" aria-label="Secciones principales">
         <button class="tab-btn active" type="button" data-target="nutrition-section">Plan nutricional</button>
         <button class="tab-btn" type="button" data-target="register-section">Registro de gym</button>
+        <button class="tab-btn" type="button" data-target="sales-section">Ventas de productos</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -27,16 +27,8 @@
           <h2>Datos del alumno</h2>
           <form id="gym-form">
             <div class="grid">
-              <label>
-                Nombre
-                <input type="text" id="name" placeholder="Ej: Juan Pérez" required />
-              </label>
-
-              <label>
-                Edad
-                <input type="number" id="age" min="14" max="90" required />
-              </label>
-
+              <label>Nombre<input type="text" id="name" placeholder="Ej: Juan Pérez" required /></label>
+              <label>Edad<input type="number" id="age" min="14" max="90" required /></label>
               <label>
                 Sexo
                 <select id="sex" required>
@@ -45,17 +37,8 @@
                   <option value="female">Femenino</option>
                 </select>
               </label>
-
-              <label>
-                Peso actual (kg)
-                <input type="number" id="weight" min="35" max="250" step="0.1" required />
-              </label>
-
-              <label>
-                Estatura (cm)
-                <input type="number" id="height" min="130" max="230" required />
-              </label>
-
+              <label>Peso actual (kg)<input type="number" id="weight" min="35" max="250" step="0.1" required /></label>
+              <label>Estatura (cm)<input type="number" id="height" min="130" max="230" required /></label>
               <label>
                 Actividad física
                 <select id="activity" required>
@@ -66,7 +49,6 @@
                   <option value="1.9">Muy alta</option>
                 </select>
               </label>
-
               <label>
                 Objetivo
                 <select id="goal" required>
@@ -76,37 +58,24 @@
                 </select>
               </label>
             </div>
-
             <button type="submit">Generar plan completo</button>
           </form>
         </section>
 
         <section id="results" class="hidden" aria-live="polite">
           <div class="card result-header" id="summary"></div>
-
           <div class="result-grid">
-            <article class="card">
-              <h3>Distribución de macronutrientes</h3>
-              <div id="macro-bars" class="stack"></div>
-            </article>
-
-            <article class="card">
-              <h3>Proyección del objetivo</h3>
-              <div id="projection" class="projection"></div>
-            </article>
+            <article class="card"><h3>Distribución de macronutrientes</h3><div id="macro-bars" class="stack"></div></article>
+            <article class="card"><h3>Proyección del objetivo</h3><div id="projection" class="projection"></div></article>
           </div>
-
           <article class="card">
             <h3>Alimentos recomendados por porción</h3>
-            <p class="muted">
-              Incluye porción sugerida, macros por alimento y opciones económicas para público peruano/provincias.
-            </p>
+            <p class="muted">Incluye porción, macros y opciones económicas para público peruano/provincias.</p>
             <div id="foods" class="food-grid"></div>
           </article>
-
           <article class="card">
             <h3>Rutina sugerida (Lunes a Sábado)</h3>
-            <p class="muted">Puedes cambiar los días según disponibilidad, manteniendo el orden de cargas.</p>
+            <p class="muted">Puedes cambiar los días según disponibilidad.</p>
             <div id="routine" class="routine-grid"></div>
           </article>
         </section>
@@ -115,70 +84,89 @@
       <section id="register-section" class="app-section hidden">
         <section class="card form-card">
           <h2>Registro de inscripciones</h2>
-          <p class="muted">Completa los datos del cliente y revisa el resumen antes de confirmar.</p>
+          <p class="muted">El sistema calcula precios según servicio y cantidad de personas (1 o 2+).</p>
 
           <form id="register-form" novalidate>
             <div class="grid">
-              <label>
-                Nombre y apellido
-                <input type="text" id="fullName" placeholder="Ej: María Quispe" required />
-              </label>
-
-              <label>
-                DNI o identificación
-                <input type="text" id="dni" placeholder="Ej: 12345678" required />
-              </label>
-
-              <label>
-                Fecha de inscripción
-                <input type="date" id="startDate" required />
-              </label>
-
+              <label>Nombre y apellido<input type="text" id="fullName" placeholder="Ej: María Quispe" required /></label>
+              <label>DNI o identificación<input type="text" id="dni" placeholder="Ej: 12345678" required /></label>
+              <label>Fecha de inscripción<input type="date" id="startDate" required /></label>
               <label>
                 Tipo de servicio
                 <select id="serviceType" required>
                   <option value="">Seleccionar servicio</option>
-                  <option value="rutina">Rutina (diario)</option>
-                  <option value="maquinas">Máquinas (mensual)</option>
-                  <option value="bailes">Bailes (mensual)</option>
-                  <option value="jumping">Jumping (mensual)</option>
-                  <option value="3servicios">3 servicios (mensual)</option>
+                  <option value="maquinas">Solo máquinas</option>
+                  <option value="bailes">Solo bailes</option>
+                  <option value="maquina_baile">Máquina + baile</option>
+                  <option value="baile_jumping">Baile + jumping</option>
+                  <option value="3servicios">Los 3 servicios</option>
                 </select>
               </label>
-
               <label>
-                Precio base (S/)
-                <input type="number" id="basePrice" readonly />
+                Cantidad de personas
+                <select id="peopleCount" required>
+                  <option value="1">1 persona</option>
+                  <option value="2plus">2 a más personas (promoción)</option>
+                </select>
               </label>
-
-              <label>
-                Fecha de término
-                <input type="date" id="endDate" readonly />
-              </label>
-
-              <label>
-                Adelanto pagado (S/)
-                <input type="number" id="advancePaid" min="0" step="0.01" value="0" required />
-              </label>
-
-              <label>
-                Total a pagar (S/)
-                <input type="number" id="totalPay" readonly />
-              </label>
-
-              <label>
-                Saldo (S/)
-                <input type="number" id="balance" readonly />
-              </label>
+              <label>Precio base (S/)<input type="number" id="basePrice" readonly /></label>
+              <label>Fecha de término<input type="date" id="endDate" readonly /></label>
+              <label>Adelanto pagado (S/)<input type="number" id="advancePaid" min="0" step="0.01" value="0" required /></label>
+              <label>Total a pagar (S/)<input type="number" id="totalPay" readonly /></label>
+              <label>Saldo (S/)<input type="number" id="balance" readonly /></label>
             </div>
 
             <p id="register-error" class="error-message hidden" role="alert"></p>
-
             <div class="actions">
               <button type="button" id="preview-btn">Ver resumen</button>
-              <button type="submit">Confirmar inscripción</button>
+              <button type="submit">Guardar inscripción</button>
             </div>
           </form>
+        </section>
+
+        <section class="card">
+          <h3>Alertas de vencimiento (3 días antes)</h3>
+          <div id="expiry-alerts" class="list-stack muted">Sin alertas por ahora.</div>
+        </section>
+
+        <section class="card">
+          <h3>Personas registradas</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="register-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="sales-section" class="app-section hidden">
+        <section class="card form-card">
+          <h2>Ventas de productos</h2>
+          <form id="sales-form" novalidate>
+            <div class="grid">
+              <label>Nombre del producto<input type="text" id="productName" required /></label>
+              <label>Unidades vendidas<input type="number" id="unitsSold" min="1" step="1" required /></label>
+              <label>Precio unitario (S/)<input type="number" id="unitPrice" min="0" step="0.01" required /></label>
+              <label>Precio final (S/)<input type="number" id="finalPrice" readonly /></label>
+            </div>
+            <p id="sales-error" class="error-message hidden" role="alert"></p>
+            <div class="actions"><button type="submit">Registrar venta</button></div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h3>Historial de ventas</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Producto</th><th>Unidades</th><th>Unitario</th><th>Total</th></tr></thead>
+              <tbody id="sales-table-body"></tbody>
+            </table>
+          </div>
         </section>
       </section>
     </main>
@@ -187,9 +175,7 @@
       <div class="modal-content card">
         <h3 id="summary-title">Resumen de inscripción</h3>
         <div id="summary-content" class="modal-grid"></div>
-        <div class="actions">
-          <button type="button" id="close-modal-btn">Cerrar</button>
-        </div>
+        <div class="actions"><button type="button" id="close-modal-btn">Cerrar</button></div>
       </div>
     </div>
 

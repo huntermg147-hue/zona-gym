@@ -1,37 +1,34 @@
 # Zona Gym Pro
 
-Aplicación web con 2 secciones principales:
+Aplicación web con 3 secciones:
 
-1. **Plan nutricional + rutina** para alumnos.
-2. **Registro de inscripciones del gym** con cálculos automáticos de precio y saldo.
+1. Plan nutricional + rutina.
+2. Registro de gym con promociones y alertas de vencimiento.
+3. Ventas de productos.
 
-## Incluye
+## Registro de gym (precios corregidos)
 
-- Fondo visual tipo gimnasio para una experiencia más atractiva.
-- Cálculo de calorías de mantenimiento y objetivo (según meta).
-- Porcentaje y gramos de macronutrientes con barras visuales.
-- Proyección orientativa de cambio semanal y mensual de peso.
-- Sugerencias de comidas orientadas a público peruano (costa, sierra, selva y provincias), con opciones económicas.
-- Rutina sugerida de Lunes a Sábado.
-- Formulario de inscripción con:
-  - nombre/apellido,
-  - DNI o identificación,
-  - fecha de inscripción,
-  - tipo de servicio,
-  - precio base,
-  - adelanto,
-  - total,
-  - saldo,
-  - fecha de término calculada automáticamente.
-- Resumen previo en modal antes de confirmar la inscripción.
+### Precio regular (1 persona)
+- Solo máquinas: S/ 50
+- Solo bailes: S/ 50
+- Máquina + baile: S/ 60
+- Baile + jumping: S/ 60
+- Los 3 servicios: S/ 70
 
-## Servicios y precios
+### Promoción (2 a más personas)
+- Máquina + baile: S/ 50
+- Baile + jumping: S/ 50
+- Los 3 servicios: S/ 60
+- Solo máquinas y solo bailes mantienen S/ 50
 
-- Rutina: **S/ 5** (servicio diario, fecha de término = mismo día).
-- Máquinas: **S/ 50** (mensual).
-- Bailes: **S/ 50** (mensual).
-- Jumping: **S/ 50** (mensual).
-- 3 servicios: **S/ 140** (mensual).
+## Funcionalidades clave
+
+- El sistema pregunta si es 1 persona o 2+ para aplicar promociones.
+- Calcula automáticamente precio base, total y saldo.
+- Calcula fecha de término (mensual: +1 mes).
+- Guarda registros de personas en almacenamiento local del navegador.
+- Muestra alertas cuando faltan 3 días o menos para vencimiento.
+- Permite registrar ventas de productos calculando precio final (`unidades x precio unitario`) y guarda historial.
 
 ## Cómo ejecutar
 
@@ -39,12 +36,4 @@ Aplicación web con 2 secciones principales:
 python3 -m http.server 8000
 ```
 
-Abrir en navegador:
-
-```text
-http://localhost:8000
-```
-
-## Nota importante
-
-Las recomendaciones son orientativas. Para un plan clínico personalizado, consultar nutricionista y entrenador.
+Abrir `http://localhost:8000`.
