@@ -554,7 +554,9 @@ function currentRegisterData() {
 }
 
 function pushRegistration(record) {
-  if (record.balance > 0) {
+  const hasPartialAdvance = record.paid > 0 && record.balance > 0;
+
+  if (hasPartialAdvance) {
     const pending = getStored(STORAGE_KEYS.PENDING);
     pending.push(record);
     setStored(STORAGE_KEYS.PENDING, pending);

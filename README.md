@@ -27,6 +27,7 @@ Sistema web para gimnasio con **5 secciones**:
 
 - Botón para borrar registros de gym **por persona** (no borra todo).
 - Sección de pagos pendientes para usuarios con adelanto parcial.
+- Si el adelanto es `0`, la inscripción se guarda en Registro de gym (no pasa a pendientes).
 - Posibilidad de agregar pagos adicionales; cuando el saldo llega a 0:
   - sale de pagos pendientes,
   - pasa automáticamente a registros activos,
