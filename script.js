@@ -214,6 +214,8 @@ const getStored = (k) => {
   }
 };
 
+const setStored = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
 const csvMessage = byId('csv-message');
 
 function setCsvMessage(message, isError = false) {
