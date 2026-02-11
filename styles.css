@@ -303,6 +303,12 @@ button:hover {
   gap: 0.35rem;
 }
 
+.food-note {
+  margin-top: 0.45rem;
+  color: #cfe0ff;
+  font-size: 0.88rem;
+}
+
 .pill {
   display: inline-block;
   font-size: 0.74rem;

@@ -21,27 +21,189 @@ const macrosByGoal = {
 
 const foodByGoal = {
   lose: [
-    { name: 'Pollo guisado + arroz', portion: '150g + 120g', protein: 41, carbs: 36, fats: 10 },
-    { name: 'Tortilla + papa sancochada', portion: '2 huevos + 150g', protein: 14, carbs: 30, fats: 10 },
-    { name: 'Pescado + camote', portion: '140g + 120g', protein: 30, carbs: 27, fats: 6 }
+    {
+      name: 'Pollo guisado + arroz + ensalada',
+      portion: 'Pechuga 150g + arroz cocido 120g + ensalada 100g',
+      protein: 41,
+      carbs: 36,
+      fats: 10,
+      kcal: 390,
+      cost: 'Económico',
+      region: 'Costa / Sierra',
+      when: 'Almuerzo',
+      note: 'Usar poca sal y 1 cdita de aceite para cocinar.'
+    },
+    {
+      name: 'Tortilla de verduras + papa sancochada',
+      portion: '2 huevos + verduras 80g + papa 150g',
+      protein: 14,
+      carbs: 30,
+      fats: 10,
+      kcal: 275,
+      cost: 'Económico',
+      region: 'Nacional',
+      when: 'Desayuno / Cena',
+      note: 'Agregar cebolla, tomate y espinaca para más saciedad.'
+    },
+    {
+      name: 'Pescado sudado + camote',
+      portion: 'Pescado 140g + camote 120g + salsa criolla 50g',
+      protein: 30,
+      carbs: 27,
+      fats: 6,
+      kcal: 285,
+      cost: 'Media-baja',
+      region: 'Costa',
+      when: 'Almuerzo',
+      note: 'Preferir pescado fresco de temporada para reducir costo.'
+    },
+    {
+      name: 'Ceviche de tarwi con choclo',
+      portion: 'Tarwi cocido 130g + choclo 80g + limón y cebolla',
+      protein: 23,
+      carbs: 24,
+      fats: 8,
+      kcal: 255,
+      cost: 'Económico',
+      region: 'Sierra',
+      when: 'Merienda',
+      note: 'Buena opción vegetal alta en proteína.'
+    }
   ],
   maintain: [
-    { name: 'Seco de pollo + frejol', portion: '150g + 120g', protein: 38, carbs: 30, fats: 12 },
-    { name: 'Tarwi + queso', portion: '100g + 40g', protein: 22, carbs: 17, fats: 12 },
-    { name: 'Atún + yuca', portion: '1 lata + 150g', protein: 28, carbs: 41, fats: 8 }
+    {
+      name: 'Seco de pollo + frejol + arroz',
+      portion: 'Pollo 150g + frejol 120g + arroz 90g',
+      protein: 38,
+      carbs: 44,
+      fats: 12,
+      kcal: 450,
+      cost: 'Media-baja',
+      region: 'Costa norte',
+      when: 'Almuerzo',
+      note: 'Controlar porción de arroz para mantener peso.'
+    },
+    {
+      name: 'Tarwi guisado + queso fresco + cancha',
+      portion: 'Tarwi 100g + queso 40g + cancha 20g',
+      protein: 22,
+      carbs: 21,
+      fats: 12,
+      kcal: 300,
+      cost: 'Económico',
+      region: 'Sierra',
+      when: 'Cena',
+      note: 'Excelente alternativa de proteína accesible.'
+    },
+    {
+      name: 'Atún con yuca y palta',
+      portion: 'Atún 1 lata + yuca 150g + palta 40g',
+      protein: 28,
+      carbs: 41,
+      fats: 8,
+      kcal: 360,
+      cost: 'Media-baja',
+      region: 'Costa / Selva',
+      when: 'Almuerzo o post entrenamiento',
+      note: 'Si hay presupuesto, reemplazar atún por bonito fresco.'
+    },
+    {
+      name: 'Lentejas estofadas + huevo',
+      portion: 'Lentejas 160g + huevo 1 und + arroz 80g',
+      protein: 20,
+      carbs: 43,
+      fats: 9,
+      kcal: 345,
+      cost: 'Económico',
+      region: 'Nacional',
+      when: 'Almuerzo',
+      note: 'Comida rendidora ideal para provincias.'
+    }
   ],
   gain: [
-    { name: 'Tallarín rojo + pollo', portion: '240g + 150g', protein: 42, carbs: 68, fats: 16 },
-    { name: 'Arroz + huevo + palta', portion: '200g + 2 und + 50g', protein: 19, carbs: 58, fats: 19 },
-    { name: 'Frejol + arroz + huevo', portion: '150g + 130g + 1 und', protein: 24, carbs: 61, fats: 11 }
+    {
+      name: 'Tallarín rojo + pollo + queso',
+      portion: 'Tallarín cocido 240g + pollo 150g + queso 20g',
+      protein: 45,
+      carbs: 70,
+      fats: 17,
+      kcal: 610,
+      cost: 'Media-baja',
+      region: 'Costa',
+      when: 'Almuerzo post entrenamiento',
+      note: 'Ideal para aumentar calorías con buena proteína.'
+    },
+    {
+      name: 'Arroz + huevo + palta + plátano',
+      portion: 'Arroz 200g + 2 huevos + palta 50g + plátano 1 und',
+      protein: 21,
+      carbs: 85,
+      fats: 19,
+      kcal: 625,
+      cost: 'Económico',
+      region: 'Nacional',
+      when: 'Desayuno reforzado',
+      note: 'Fácil de preparar y económico para volumen.'
+    },
+    {
+      name: 'Frejol + arroz + huevo + camote',
+      portion: 'Frejol 150g + arroz 130g + 1 huevo + camote 120g',
+      protein: 25,
+      carbs: 83,
+      fats: 11,
+      kcal: 545,
+      cost: 'Económico',
+      region: 'Nacional',
+      when: 'Almuerzo / Cena',
+      note: 'Plato rendidor para subir peso con presupuesto bajo.'
+    },
+    {
+      name: 'Quinua con leche + maní',
+      portion: 'Quinua cocida 180g + leche 250ml + maní 20g',
+      protein: 22,
+      carbs: 58,
+      fats: 18,
+      kcal: 495,
+      cost: 'Media-baja',
+      region: 'Sierra',
+      when: 'Merienda nocturna',
+      note: 'Aporta energía y micronutrientes para recuperación.'
+    }
   ]
 };
 
 const routineByGoal = {
-  lose: ['Lunes: Pierna + cardio', 'Martes: Espalda + abdomen', 'Miércoles: HIIT', 'Jueves: Pecho + tríceps', 'Viernes: Glúteo + posterior', 'Sábado: Full body ligero'],
-  maintain: ['Lunes: Pecho + hombro', 'Martes: Pierna', 'Miércoles: Cardio + core', 'Jueves: Espalda + bíceps', 'Viernes: Pierna + glúteo', 'Sábado: Full body técnico'],
-  gain: ['Lunes: Pecho pesado', 'Martes: Pierna fuerza', 'Miércoles: Espalda + bíceps', 'Jueves: Hombros + core', 'Viernes: Pierna hipertrofia', 'Sábado: Upper completo']
+  lose: [
+    { day: 'Lunes', focus: 'Pierna + cardio', exercises: ['Sentadilla 4x12', 'Prensa 4x15', 'Caminata inclinada 20 min'] },
+    { day: 'Martes', focus: 'Espalda + abdomen', exercises: ['Jalón al pecho 4x12', 'Remo con mancuerna 3x12', 'Plancha 4x40s'] },
+    { day: 'Miércoles', focus: 'HIIT', exercises: ['Bicicleta 30s/30s x 12', 'Burpees 3x12', 'Movilidad 10 min'] },
+    { day: 'Jueves', focus: 'Pecho + tríceps', exercises: ['Press banca 4x10', 'Fondos asistidos 3x12', 'Extensión tríceps 3x15'] },
+    { day: 'Viernes', focus: 'Glúteo + posterior', exercises: ['Peso muerto rumano 4x10', 'Hip thrust 4x12', 'Abductores 3x20'] },
+    { day: 'Sábado', focus: 'Full body ligero', exercises: ['Circuito 5 estaciones x 3 vueltas', 'Cardio suave 15 min'] }
+  ],
+  maintain: [
+    { day: 'Lunes', focus: 'Pecho + hombro', exercises: ['Press inclinado 4x10', 'Elevaciones laterales 4x15', 'Flexiones 3x12'] },
+    { day: 'Martes', focus: 'Pierna', exercises: ['Sentadilla goblet 4x12', 'Zancadas 3x12', 'Gemelos 4x18'] },
+    { day: 'Miércoles', focus: 'Cardio + core', exercises: ['Trote 25 min', 'Crunch polea 4x15', 'Plancha lateral 3x30s'] },
+    { day: 'Jueves', focus: 'Espalda + bíceps', exercises: ['Remo barra 4x10', 'Jalón cerrado 3x12', 'Curl bíceps 3x12'] },
+    { day: 'Viernes', focus: 'Pierna + glúteo', exercises: ['Hip thrust 4x10', 'Peso muerto 3x10', 'Sentadilla búlgara 3x12'] },
+    { day: 'Sábado', focus: 'Full body técnico', exercises: ['Técnica de básicos 45 min', 'Cardio moderado 15 min'] }
+  ],
+  gain: [
+    { day: 'Lunes', focus: 'Pecho pesado', exercises: ['Press banca 5x5', 'Press inclinado 4x8', 'Aperturas 3x12'] },
+    { day: 'Martes', focus: 'Pierna fuerza', exercises: ['Sentadilla 5x5', 'Prensa 4x8', 'Peso muerto rumano 4x8'] },
+    { day: 'Miércoles', focus: 'Espalda + bíceps', exercises: ['Dominadas asistidas 4x8', 'Remo T 4x10', 'Curl barra 4x10'] },
+    { day: 'Jueves', focus: 'Hombros + core', exercises: ['Press militar 5x6', 'Elevaciones laterales 4x12', 'Rueda abdominal 4x10'] },
+    { day: 'Viernes', focus: 'Pierna hipertrofia', exercises: ['Sentadilla frontal 4x10', 'Zancadas 4x12', 'Extensiones 3x15'] },
+    { day: 'Sábado', focus: 'Upper completo', exercises: ['Circuito torso 5 ejercicios x 4 series', 'Movilidad + estiramiento 15 min'] }
+  ]
 };
+
+function getWeightProjection(goal) {
+  if (goal === 'lose') return { weekly: -0.45, monthly: -1.8 };
+  if (goal === 'gain') return { weekly: 0.3, monthly: 1.2 };
+  return { weekly: 0, monthly: 0 };
+}
 
 const byId = (id) => document.getElementById(id);
 const getStored = (k) => {
@@ -127,9 +289,12 @@ gymForm.addEventListener('submit', (e) => {
     macroBars.appendChild(row);
   });
 
-  projection.innerHTML = '<div class="projection-box">Plan orientativo. Ajustar con profesional.</div>';
-  foods.innerHTML = foodByGoal[data.goal].map((f) => `<article class="food-item"><h4>${f.name}</h4><p class="muted">${f.portion}</p><ul><li>P: ${f.protein}g</li><li>C: ${f.carbs}g</li><li>G: ${f.fats}g</li></ul></article>`).join('');
-  routine.innerHTML = routineByGoal[data.goal].map((r) => `<article class="day-card">${r}</article>`).join('');
+  const projectionData = getWeightProjection(data.goal);
+  projection.innerHTML = `<div class="projection-box"><strong>Proyección semanal:</strong> ${projectionData.weekly > 0 ? '+' : ''}${projectionData.weekly.toFixed(2)} kg/semana</div>
+  <div class="projection-box"><strong>Proyección mensual:</strong> ${projectionData.monthly > 0 ? '+' : ''}${projectionData.monthly.toFixed(2)} kg/mes</div>
+  <div class="projection-box">Plan orientativo para público peruano. Ajustar con nutricionista si hay condición médica.</div>`;
+  foods.innerHTML = foodByGoal[data.goal].map((f) => `<article class="food-item"><h4>${f.name}</h4><p class="muted">${f.portion}</p><ul><li>Proteína: ${f.protein}g</li><li>Carbohidratos: ${f.carbs}g</li><li>Grasas: ${f.fats}g</li><li>Energía aprox: ${f.kcal} kcal</li></ul><p class="muted">Momento sugerido: ${f.when}</p><p class="food-note">${f.note}</p><div class="food-meta"><span class="pill">Costo: ${f.cost}</span><span class="pill">Zona: ${f.region}</span></div></article>`).join('');
+  routine.innerHTML = routineByGoal[data.goal].map((r) => `<article class="day-card"><h4>${r.day}: ${r.focus}</h4><ul>${r.exercises.map((exercise) => `<li>${exercise}</li>`).join('')}</ul></article>`).join('');
   results.classList.remove('hidden');
 });
 

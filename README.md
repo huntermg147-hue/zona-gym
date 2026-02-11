@@ -34,6 +34,7 @@ Sistema web para gimnasio con **5 secciones**:
 - Alertas de vencimiento con 3 días de anticipación.
 - Sección de búsqueda para ver datos completos del usuario, vencimiento y estado de pago.
 - Módulo de ventas con cálculo automático de precio final (`unidades x precio unitario`).
+- En plan nutricional se restauró la sección inicial y se ampliaron las comidas recomendadas con mayor detalle: porción, macros por porción, kcal aproximadas, costo estimado, región sugerida y momento de consumo.
 
 ## Ejecución
 
