@@ -213,10 +213,180 @@ const getStored = (k) => {
     return [];
   }
 };
-const setStored = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+const csvMessage = byId('csv-message');
+
+function setCsvMessage(message, isError = false) {
+  if (!csvMessage) return;
+  csvMessage.textContent = message;
+  csvMessage.classList.toggle('csv-error', isError);
+}
+
+function toCsvValue(value) {
+  const str = String(value ?? '');
+  return `"${str.replaceAll('"', '""')}"`;
+}
+
+function normalizeNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function buildCsvRows() {
+  const active = getStored(STORAGE_KEYS.ACTIVE).map((r) => ({ source: 'active', ...r }));
+  const pending = getStored(STORAGE_KEYS.PENDING).map((r) => ({ source: 'pending', ...r }));
+  const sales = getStored(STORAGE_KEYS.SALES).map((r) => ({ source: 'sales', ...r }));
+  return [...active, ...pending, ...sales];
+}
+
+function exportToCsv() {
+  const rows = buildCsvRows();
+  const headers = ['source', 'id', 'fullName', 'dni', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'product', 'units', 'unitPrice', 'final'];
+  const lines = [headers.join(',')];
+
+  rows.forEach((row) => {
+    const line = headers.map((header) => toCsvValue(row[header] ?? '')).join(',');
+    lines.push(line);
+  });
+
+  const blob = new Blob([`\ufeff${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `zona-gym-backup-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  setCsvMessage(`Exportación completada: ${rows.length} registros.`);
+}
+
+function parseCsvLine(line) {
+  const values = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      i += 1;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      values.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  values.push(current);
+  return values;
+}
+
+function importFromCsvText(csvText) {
+  const cleaned = csvText.replace(/^﻿/, '').trim();
+  if (!cleaned) throw new Error('El archivo CSV está vacío.');
+
+  const lines = cleaned.split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) throw new Error('El CSV no contiene filas para importar.');
+
+  const headers = parseCsvLine(lines[0]).map((h) => h.trim());
+  const required = ['source'];
+  if (!required.every((h) => headers.includes(h))) {
+    throw new Error('CSV inválido: falta la columna source.');
+  }
+
+  const active = [];
+  const pending = [];
+  const sales = [];
+
+  for (let i = 1; i < lines.length; i += 1) {
+    const values = parseCsvLine(lines[i]);
+    const row = Object.fromEntries(headers.map((h, idx) => [h, values[idx] ?? '']));
+
+    if (row.source === 'sales') {
+      if (!row.product) continue;
+      sales.push({
+        product: row.product,
+        units: normalizeNumber(row.units),
+        unitPrice: normalizeNumber(row.unitPrice),
+        final: normalizeNumber(row.final)
+      });
+      continue;
+    }
+
+    if (!row.fullName || !row.dni) continue;
+    const record = {
+      id: row.id || generateId(),
+      fullName: row.fullName,
+      dni: row.dni,
+      serviceKey: row.serviceKey || '',
+      service: row.service || '-',
+      people: row.people || '1',
+      startDate: row.startDate || '',
+      endDate: row.endDate || '',
+      total: normalizeNumber(row.total),
+      paid: normalizeNumber(row.paid),
+      balance: normalizeNumber(row.balance)
+    };
+
+    if (row.source === 'pending') pending.push(record);
+    else active.push(record);
+  }
+
+  setStored(STORAGE_KEYS.ACTIVE, active);
+  setStored(STORAGE_KEYS.PENDING, pending);
+  setStored(STORAGE_KEYS.SALES, sales);
+
+  renderActiveTable();
+  renderPendingTable();
+  renderSales();
+  renderExpiryAlerts();
+  renderSearchResults();
+
+  setCsvMessage(`Importación completada: activos ${active.length}, pendientes ${pending.length}, ventas ${sales.length}.`);
+}
+
+function setupCsvTools() {
+  const exportBtn = byId('export-csv-btn');
+  const importBtn = byId('import-csv-btn');
+  const fileInput = byId('csv-file-input');
+
+  if (!exportBtn || !importBtn || !fileInput) return;
+
+  exportBtn.addEventListener('click', exportToCsv);
+  importBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importFromCsvText(String(reader.result || ''));
+      } catch (error) {
+        setCsvMessage(error.message || 'No se pudo importar el archivo.', true);
+      } finally {
+        fileInput.value = '';
+      }
+    };
+    reader.onerror = () => {
+      setCsvMessage('No se pudo leer el archivo CSV.', true);
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
 
 
 function generateId() {
+
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
@@ -643,3 +813,4 @@ renderActiveTable();
 renderPendingTable();
 renderSales();
 renderExpiryAlerts();
+setupCsvTools();

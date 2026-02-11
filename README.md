@@ -49,6 +49,11 @@ http://localhost:8000
 ```
 
 
+## Exportar e importar CSV (Excel)
+
+- En la sección **Registro de gym** puedes usar `Exportar datos (CSV)` para descargar un respaldo compatible con Excel.
+- También puedes usar `Importar datos (CSV)` para restaurar activos, pendientes y ventas desde un backup.
+
 ## Persistencia de datos
 
 - Los registros (activos, pendientes y ventas) se guardan en `localStorage` del navegador.

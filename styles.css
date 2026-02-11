@@ -410,3 +410,12 @@ th {
   padding: 0.45rem 0.5rem;
   border-radius: 8px;
 }
+
+
+.data-tools {
+  margin-top: 0.4rem;
+}
+
+.csv-error {
+  color: #ffd3dc;
+}

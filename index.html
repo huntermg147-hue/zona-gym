@@ -120,6 +120,12 @@
 
         <section class="card">
           <h3>Personas registradas (pagado completo)</h3>
+          <div class="actions data-tools">
+            <button type="button" id="export-csv-btn">Exportar datos (CSV)</button>
+            <button type="button" id="import-csv-btn">Importar datos (CSV)</button>
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" class="hidden" />
+          </div>
+          <p id="csv-message" class="muted">Puedes respaldar o restaurar registros en formato compatible con Excel.</p>
           <div class="table-wrap">
             <table>
               <thead>
