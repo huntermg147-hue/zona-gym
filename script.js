@@ -288,70 +288,57 @@ function exportToExcelReport() {
   const active = getStored(STORAGE_KEYS.ACTIVE);
   const pending = getStored(STORAGE_KEYS.PENDING);
   const sales = getStored(STORAGE_KEYS.SALES);
-  const staff = getStored(STORAGE_KEYS.STAFF);
 
-  const rows = [
-    ...active.map((r) => ({
-      categoria: 'Inscripción activa',
-      nombre: r.fullName,
+  const maquinasRows = [...active, ...pending]
+    .filter((r) => r.serviceKey === 'maquinas')
+    .map((r) => ({
+      cliente: r.fullName,
       celular: r.phone || r.dni || '-',
-      detalle: r.service,
-      fecha: r.startDate,
+      servicio: r.service,
+      fecha: r.startDate || '-',
       total: Number(r.total || 0),
       pagado: Number(r.paid || 0),
       saldo: Number(r.balance || 0),
       metodo: formatPayMethod(r.paymentMethod || 'cash')
-    })),
-    ...pending.map((r) => ({
-      categoria: 'Pago pendiente',
-      nombre: r.fullName,
-      celular: r.phone || r.dni || '-',
-      detalle: r.service,
-      fecha: r.startDate,
-      total: Number(r.total || 0),
-      pagado: Number(r.paid || 0),
-      saldo: Number(r.balance || 0),
-      metodo: formatPayMethod(r.paymentMethod || 'cash')
-    })),
-    ...sales.map((s) => ({
-      categoria: 'Venta',
-      nombre: s.product,
-      celular: '-',
-      detalle: `${Number(s.units || 0)} und x S/ ${Number(s.unitPrice || 0).toFixed(2)}`,
-      fecha: s.date || '-',
-      total: Number(s.final || 0),
-      pagado: Number(s.final || 0),
-      saldo: 0,
-      metodo: formatPayMethod(s.method || 'cash')
-    })),
-    ...staff.map((m) => ({
-      categoria: 'Personal',
-      nombre: m.staffName,
-      celular: '-',
-      detalle: m.product,
-      fecha: m.date || '-',
-      total: Number(m.cash || 0),
-      pagado: Number(m.cash || 0),
-      saldo: 0,
-      metodo: 'Efectivo'
-    }))
-  ];
+    }));
 
-  const totalGeneral = rows.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const debtRows = pending.map((r) => ({
+    cliente: r.fullName,
+    celular: r.phone || r.dni || '-',
+    servicio: r.service,
+    fecha: r.startDate || '-',
+    total: Number(r.total || 0),
+    pagado: Number(r.paid || 0),
+    saldo: Number(r.balance || 0),
+    metodo: formatPayMethod(r.paymentMethod || 'cash')
+  }));
 
-  const bodyRows = rows.map((r) => `
-    <tr>
-      <td>${toHtmlCell(r.categoria)}</td>
-      <td>${toHtmlCell(r.nombre)}</td>
-      <td>${toHtmlCell(r.celular)}</td>
-      <td>${toHtmlCell(r.detalle)}</td>
-      <td>${toHtmlCell(r.fecha)}</td>
-      <td class="num">S/ ${Number(r.total).toFixed(2)}</td>
-      <td class="num">S/ ${Number(r.pagado).toFixed(2)}</td>
-      <td class="num">S/ ${Number(r.saldo).toFixed(2)}</td>
-      <td>${toHtmlCell(r.metodo)}</td>
-    </tr>
-  `).join('');
+  const salesRows = sales.map((s) => ({
+    producto: s.product,
+    unidades: Number(s.units || 0),
+    unitario: Number(s.unitPrice || 0),
+    total: Number(s.final || 0),
+    fecha: s.date || '-',
+    metodo: formatPayMethod(s.method || 'cash')
+  }));
+
+  const tableNoData = '<tr><td colspan="8">Sin datos para este informe.</td></tr>';
+
+  const maquinasBody = maquinasRows.length
+    ? maquinasRows.map((r) => `<tr><td>${toHtmlCell(r.cliente)}</td><td>${toHtmlCell(r.celular)}</td><td>${toHtmlCell(r.servicio)}</td><td>${toHtmlCell(r.fecha)}</td><td class="num">S/ ${r.total.toFixed(2)}</td><td class="num">S/ ${r.pagado.toFixed(2)}</td><td class="num">S/ ${r.saldo.toFixed(2)}</td><td>${toHtmlCell(r.metodo)}</td></tr>`).join('')
+    : tableNoData;
+
+  const debtBody = debtRows.length
+    ? debtRows.map((r) => `<tr><td>${toHtmlCell(r.cliente)}</td><td>${toHtmlCell(r.celular)}</td><td>${toHtmlCell(r.servicio)}</td><td>${toHtmlCell(r.fecha)}</td><td class="num">S/ ${r.total.toFixed(2)}</td><td class="num">S/ ${r.pagado.toFixed(2)}</td><td class="num">S/ ${r.saldo.toFixed(2)}</td><td>${toHtmlCell(r.metodo)}</td></tr>`).join('')
+    : tableNoData;
+
+  const salesBody = salesRows.length
+    ? salesRows.map((r) => `<tr><td>${toHtmlCell(r.producto)}</td><td class="num">${r.unidades}</td><td class="num">S/ ${r.unitario.toFixed(2)}</td><td class="num">S/ ${r.total.toFixed(2)}</td><td>${toHtmlCell(r.fecha)}</td><td>${toHtmlCell(r.metodo)}</td></tr>`).join('')
+    : '<tr><td colspan="6">Sin datos para este informe.</td></tr>';
+
+  const totalMaquinas = maquinasRows.reduce((sum, r) => sum + r.total, 0);
+  const totalDeuda = debtRows.reduce((sum, r) => sum + r.saldo, 0);
+  const totalVentas = salesRows.reduce((sum, r) => sum + r.total, 0);
 
   const html = `
   <html>
@@ -360,8 +347,9 @@ function exportToExcelReport() {
       <style>
         body { font-family: Calibri, Arial, sans-serif; padding: 18px; color: #1f2937; }
         h1 { margin: 0 0 6px; font-size: 22px; }
-        p { margin: 0 0 12px; color: #374151; }
-        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        h2 { margin: 18px 0 8px; font-size: 15px; color: #0f172a; }
+        p { margin: 0 0 10px; color: #374151; }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; margin-bottom: 12px; }
         th, td {
           border: 1px solid #9ca3af;
           padding: 8px 10px;
@@ -377,42 +365,37 @@ function exportToExcelReport() {
           font-weight: 700;
         }
         td.num { text-align: right; }
-        tfoot td {
-          background: #e0f2fe;
-          font-weight: 700;
-        }
+        tfoot td { background: #e0f2fe; font-weight: 700; }
       </style>
     </head>
     <body>
       <h1>Informe Zona Gym</h1>
       <p>Fecha de generación: ${new Date().toLocaleString('es-PE')}</p>
+
+      <h2>1) Informe de máquinas</h2>
       <table>
-        <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Nombre / Producto</th>
-            <th>Celular</th>
-            <th>Detalle</th>
-            <th>Fecha</th>
-            <th>Total</th>
-            <th>Pagado</th>
-            <th>Saldo</th>
-            <th>Método de pago</th>
-          </tr>
-        </thead>
-        <tbody>${bodyRows}</tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5">TOTAL GENERAL</td>
-            <td class="num">S/ ${totalGeneral.toFixed(2)}</td>
-            <td colspan="3"></td>
-          </tr>
-        </tfoot>
+        <thead><tr><th>Cliente</th><th>Celular</th><th>Servicio</th><th>Fecha</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Método</th></tr></thead>
+        <tbody>${maquinasBody}</tbody>
+        <tfoot><tr><td colspan="4">TOTAL MÁQUINAS</td><td class="num">S/ ${totalMaquinas.toFixed(2)}</td><td colspan="3"></td></tr></tfoot>
+      </table>
+
+      <h2>2) Informe de ventas</h2>
+      <table>
+        <thead><tr><th>Producto</th><th>Unidades</th><th>Precio unitario</th><th>Total</th><th>Fecha</th><th>Método</th></tr></thead>
+        <tbody>${salesBody}</tbody>
+        <tfoot><tr><td colspan="3">TOTAL VENTAS</td><td class="num">S/ ${totalVentas.toFixed(2)}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+
+      <h2>3) Informe de personas con deuda</h2>
+      <table>
+        <thead><tr><th>Cliente</th><th>Celular</th><th>Servicio</th><th>Fecha</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Método</th></tr></thead>
+        <tbody>${debtBody}</tbody>
+        <tfoot><tr><td colspan="6">TOTAL DEUDA</td><td class="num">S/ ${totalDeuda.toFixed(2)}</td><td></td></tr></tfoot>
       </table>
     </body>
   </html>`;
 
-  const blob = new Blob([`\ufeff${html}`], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const blob = new Blob([`﻿${html}`], { type: 'application/vnd.ms-excel;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -422,7 +405,8 @@ function exportToExcelReport() {
   a.remove();
   URL.revokeObjectURL(url);
 
-  setCsvMessage(`Informe Excel generado con ${rows.length} filas.`);
+  const totalRows = maquinasRows.length + salesRows.length + debtRows.length;
+  setCsvMessage(`Informe Excel generado con ${totalRows} filas en 3 cuadros.`);
 }
 
 function parseCsvLine(line, delimiter = ',') {

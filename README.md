@@ -64,6 +64,7 @@ http://localhost:8000
 - También puedes usar `Importar datos (CSV)` para restaurar activos, pendientes, ventas y personal desde un backup.
 - El CSV se exporta con separador `;` para que Excel lo abra en columnas automáticamente.
 - También puedes usar `Exportar informe (Excel)` para generar un archivo presentable con encabezados en español, bordes y formato de informe.
+- El informe Excel se genera en 3 cuadros separados: máquinas, ventas y personas con deuda, con el mismo formato visual.
 
 ## Persistencia de datos
 
