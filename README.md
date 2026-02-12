@@ -1,6 +1,6 @@
 # Zona Gym Pro
 
-Sistema web para gimnasio con **6 secciones**:
+Sistema web para gimnasio con **8 secciones**:
 
 1. Plan nutricional + rutina.
 2. Registro de gym.
@@ -8,6 +8,8 @@ Sistema web para gimnasio con **6 secciones**:
 4. Pagos pendientes.
 5. Búsqueda de usuario.
 6. Control de personal del gym.
+7. Reportes.
+8. Cierre de caja.
 
 ## Precios y promociones
 
@@ -38,6 +40,7 @@ Sistema web para gimnasio con **6 secciones**:
 - Sección de búsqueda para ver datos completos del usuario, vencimiento y estado de pago.
 - Módulo de ventas con cálculo automático de precio final (`unidades x precio unitario`).
 - Control de personal del gym con registro de consumo/adelantos y vista agrupada por trabajador.
+- Cierre de caja con resumen diario/mensual por: máquinas, baile+jumping y ventas, separado por efectivo y yape.
 - En plan nutricional se restauró la sección inicial y se ampliaron las comidas recomendadas con mayor detalle: porción, macros por porción, kcal aproximadas, costo estimado, región sugerida y momento de consumo.
 
 ## Ejecución
@@ -56,10 +59,10 @@ http://localhost:8000
 ## Exportar e importar CSV (Excel)
 
 - En la sección **Registro de gym** puedes usar `Exportar datos (CSV)` para descargar un respaldo compatible con Excel.
-- También puedes usar `Importar datos (CSV)` para restaurar activos, pendientes y ventas desde un backup.
+- También puedes usar `Importar datos (CSV)` para restaurar activos, pendientes, ventas y personal desde un backup.
 
 ## Persistencia de datos
 
-- Los registros (activos, pendientes y ventas) se guardan en `localStorage` del navegador.
+- Los registros (activos, pendientes, ventas y personal) se guardan en `localStorage` del navegador.
 - Si cierras y abres la app otro día en el mismo navegador/equipo, los datos se mantienen.
 - Si borras datos del navegador, se perderán.

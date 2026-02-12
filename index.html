@@ -11,7 +11,7 @@
       <section class="hero">
         <p class="badge">PLANIFICADOR FITNESS</p>
         <h1>Zona Gym Pro</h1>
-        <p>Sistema con 6 secciones: plan nutricional, registro, ventas, pagos pendientes, búsqueda de usuarios y control de personal.</p>
+        <p>Sistema con 8 secciones: plan nutricional, registro, ventas, pagos pendientes, búsqueda, personal, reportes y cierre de caja.</p>
       </section>
 
       <nav class="section-tabs" aria-label="Secciones principales">
@@ -21,6 +21,8 @@
         <button class="tab-btn" type="button" data-target="pending-section">Pagos pendientes</button>
         <button class="tab-btn" type="button" data-target="search-section">Buscar usuario</button>
         <button class="tab-btn" type="button" data-target="staff-section">Personal gym</button>
+        <button class="tab-btn" type="button" data-target="reports-section">Reportes</button>
+        <button class="tab-btn" type="button" data-target="closure-section">Cierre de caja</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -103,6 +105,7 @@
               <label>Precio base (S/)<input type="number" id="basePrice" readonly /></label>
               <label>Fecha de término<input type="date" id="endDate" readonly /></label>
               <label>Adelanto pagado (S/)<input type="number" id="advancePaid" min="0" step="0.01" value="0" required /></label>
+              <label>Medio de pago del adelanto<select id="registerPayMethod"><option value="cash">Efectivo</option><option value="yape">Yape</option></select></label>
               <label>Total a pagar (S/)<input type="number" id="totalPay" readonly /></label>
               <label>Saldo (S/)<input type="number" id="balance" readonly /></label>
             </div>
@@ -149,6 +152,8 @@
               <label>Unidades vendidas<input type="number" id="unitsSold" min="1" step="1" required /></label>
               <label>Precio unitario (S/)<input type="number" id="unitPrice" min="0" step="0.01" required /></label>
               <label>Precio final (S/)<input type="number" id="finalPrice" readonly /></label>
+              <label>Medio de pago<select id="salesPayMethod"><option value="cash">Efectivo</option><option value="yape">Yape</option></select></label>
+              <label>Fecha de venta<input type="date" id="saleDate" required /></label>
             </div>
             <p id="sales-error" class="error-message hidden" role="alert"></p>
             <div class="actions"><button type="submit">Registrar venta</button></div>
@@ -159,7 +164,7 @@
           <h3>Historial de ventas</h3>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Producto</th><th>Unidades</th><th>Unitario</th><th>Total</th></tr></thead>
+              <thead><tr><th>Producto</th><th>Unidades</th><th>Unitario</th><th>Total</th><th>Método</th><th>Fecha</th></tr></thead>
               <tbody id="sales-table-body"></tbody>
             </table>
           </div>
@@ -212,7 +217,7 @@
           <h3>Registro general del personal</h3>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Personal</th><th>Producto</th><th>Efectivo</th><th>Fecha</th></tr></thead>
+              <thead><tr><th>Personal</th><th>Producto</th><th>Efectivo</th><th>Fecha</th><th>Acción</th></tr></thead>
               <tbody id="staff-table-body"></tbody>
             </table>
           </div>
@@ -224,7 +229,40 @@
         </section>
       </section>
 
-    </main>
+
+      <section id="reports-section" class="app-section hidden">
+        <section class="card">
+          <h2>Reportes</h2>
+          <p class="muted">Sección reservada para reportes adicionales.</p>
+        </section>
+      </section>
+
+      <section id="closure-section" class="app-section hidden">
+        <section class="card">
+          <h2>Cierre de caja</h2>
+          <p class="muted">Resumen diario y mensual por servicio y ventas, separado por efectivo y yape.</p>
+          <div class="actions">
+            <button type="button" id="refresh-closure-btn">Actualizar cierre</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Total de máquinas</h3>
+          <div id="closure-maquinas" class="closure-grid"></div>
+        </section>
+
+        <section class="card">
+          <h3>Baile y jumping</h3>
+          <div id="closure-baile-jumping" class="closure-grid"></div>
+        </section>
+
+        <section class="card">
+          <h3>Ventas</h3>
+          <div id="closure-ventas" class="closure-grid"></div>
+        </section>
+      </section>
+
+    </main
 
     <div id="summary-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="summary-title">
       <div class="modal-content card">

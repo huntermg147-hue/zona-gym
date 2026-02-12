@@ -235,17 +235,21 @@ function normalizeNumber(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function formatPayMethod(method) {
+  return method === 'yape' ? 'Yape' : 'Efectivo';
+}
+
 function buildCsvRows() {
   const active = getStored(STORAGE_KEYS.ACTIVE).map((r) => ({ source: 'active', ...r }));
   const pending = getStored(STORAGE_KEYS.PENDING).map((r) => ({ source: 'pending', ...r }));
-  const sales = getStored(STORAGE_KEYS.SALES).map((r) => ({ source: 'sales', ...r }));
-  const staff = getStored(STORAGE_KEYS.STAFF).map((r) => ({ source: 'staff', ...r }));
+  const sales = getStored(STORAGE_KEYS.SALES).map((r) => ({ source: 'sales', ...r, saleMethod: r.method || 'cash', saleDate: r.date || '' }));
+  const staff = getStored(STORAGE_KEYS.STAFF).map((r) => ({ source: 'staff', ...r, staffName: r.staffName, staffProduct: r.product, staffCash: r.cash, staffDate: r.date }));
   return [...active, ...pending, ...sales, ...staff];
 }
 
 function exportToCsv() {
   const rows = buildCsvRows();
-  const headers = ['source', 'id', 'fullName', 'phone', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'product', 'units', 'unitPrice', 'final', 'staffName', 'staffProduct', 'staffCash', 'staffDate'];
+  const headers = ['source', 'id', 'fullName', 'phone', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'paymentMethod', 'paymentHistory', 'product', 'units', 'unitPrice', 'final', 'saleMethod', 'saleDate', 'staffName', 'staffProduct', 'staffCash', 'staffDate'];
   const lines = [headers.join(',')];
 
   rows.forEach((row) => {
@@ -332,7 +336,9 @@ function importFromCsvText(csvText) {
         product: row.product,
         units: normalizeNumber(row.units),
         unitPrice: normalizeNumber(row.unitPrice),
-        final: normalizeNumber(row.final)
+        final: normalizeNumber(row.final),
+        method: row.saleMethod || 'cash',
+        date: row.saleDate || ''
       });
       continue;
     }
@@ -349,7 +355,15 @@ function importFromCsvText(csvText) {
       endDate: row.endDate || '',
       total: normalizeNumber(row.total),
       paid: normalizeNumber(row.paid),
-      balance: normalizeNumber(row.balance)
+      balance: normalizeNumber(row.balance),
+      paymentMethod: row.paymentMethod || 'cash',
+      paymentHistory: (() => {
+        try {
+          return JSON.parse(row.paymentHistory || '[]');
+        } catch {
+          return [];
+        }
+      })()
     };
 
     if (row.source === 'pending') pending.push(record);
@@ -370,6 +384,7 @@ function importFromCsvText(csvText) {
   renderStaffByWorker();
 
   setCsvMessage(`Importación completada: activos ${active.length}, pendientes ${pending.length}, ventas ${sales.length}, personal ${staff.length}.`);
+  renderClosure();
 }
 
 function setupCsvTools() {
@@ -569,7 +584,9 @@ function currentRegisterData() {
     endDate: byId('endDate').value,
     total,
     paid,
-    balance
+    balance,
+    paymentMethod: byId('registerPayMethod').value,
+    paymentHistory: paid > 0 ? [{ amount: paid, method: byId('registerPayMethod').value, date: byId('startDate').value }] : []
   };
 }
 
@@ -640,18 +657,20 @@ registerForm.addEventListener('submit', (e) => {
   const record = currentRegisterData();
   pushRegistration(record);
 
-  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${record.fullName}</p><p><strong>Celular:</strong> ${record.phone || '-'}</p><p><strong>Servicio:</strong> ${record.service}</p><p><strong>Total:</strong> S/ ${record.total.toFixed(2)}</p><p><strong>Pagado:</strong> S/ ${record.paid.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${record.balance.toFixed(2)}</p>`;
+  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${record.fullName}</p><p><strong>Celular:</strong> ${record.phone || '-'}</p><p><strong>Servicio:</strong> ${record.service}</p><p><strong>Total:</strong> S/ ${record.total.toFixed(2)}</p><p><strong>Pagado:</strong> S/ ${record.paid.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${record.balance.toFixed(2)}</p><p><strong>Método adelanto:</strong> ${formatPayMethod(record.paymentMethod)}</p>`;
   openModal();
 
   registerForm.reset();
   byId('peopleCount').value = '1';
   byId('advancePaid').value = '0';
+  byId('registerPayMethod').value = 'cash';
   refreshRegisterCalc();
 
   renderActiveTable();
   renderPendingTable();
   renderExpiryAlerts();
   renderSearchResults();
+  renderClosure();
 });
 
 byId('preview-btn').addEventListener('click', () => {
@@ -690,7 +709,7 @@ function renderPendingTable() {
     tr.innerHTML = `
       <td>${p.fullName}</td><td>${p.phone || p.dni || '-'}</td><td>${p.service}</td>
       <td>S/ ${p.total.toFixed(2)}</td><td>S/ ${p.paid.toFixed(2)}</td><td>S/ ${p.balance.toFixed(2)}</td>
-      <td><input type="number" min="0" step="0.01" value="0" class="pay-input" data-pay-id="${p.id}" /></td>
+      <td><input type="number" min="0" step="0.01" value="0" class="pay-input" data-pay-id="${p.id}" /><select class="pay-method" data-pay-method="${p.id}"><option value="cash">Efectivo</option><option value="yape">Yape</option></select></td>
       <td>
         <button type="button" class="mini-btn" data-add-pay="${p.id}">Agregar pago</button>
         <button type="button" class="mini-btn danger" data-delete-pending="${p.id}">Borrar</button>
@@ -700,7 +719,7 @@ function renderPendingTable() {
   });
 }
 
-function addPaymentToPending(id, amount) {
+function addPaymentToPending(id, amount, method) {
   const pending = getStored(STORAGE_KEYS.PENDING);
   const idx = pending.findIndex((p) => p.id === id);
   if (idx === -1) return;
@@ -708,6 +727,8 @@ function addPaymentToPending(id, amount) {
   const p = pending[idx];
   p.paid = Number((p.paid + amount).toFixed(2));
   p.balance = Number((p.total - p.paid).toFixed(2));
+  if (!Array.isArray(p.paymentHistory)) p.paymentHistory = [];
+  p.paymentHistory.push({ amount, method, date: new Date().toISOString().slice(0, 10) });
 
   if (p.balance <= 0) {
     p.balance = 0;
@@ -725,6 +746,7 @@ function addPaymentToPending(id, amount) {
   renderActiveTable();
   renderExpiryAlerts();
   renderSearchResults();
+  renderClosure();
 }
 
 function deletePending(id) {
@@ -743,7 +765,9 @@ byId('pending-table-body').addEventListener('click', (e) => {
     const input = byId('pending-table-body').querySelector(`[data-pay-id="${id}"]`);
     const amount = Number(input?.value || 0);
     if (!Number.isFinite(amount) || amount <= 0) return;
-    addPaymentToPending(id, amount);
+    const methodSelect = byId('pending-table-body').querySelector(`[data-pay-method="${id}"]`);
+    const method = methodSelect?.value || 'cash';
+    addPaymentToPending(id, amount, method);
   }
 
   if (delBtn) {
@@ -766,12 +790,12 @@ function renderSales() {
   const sales = getStored(STORAGE_KEYS.SALES);
   body.innerHTML = '';
   if (sales.length === 0) {
-    body.innerHTML = '<tr><td colspan="4">Sin ventas aún.</td></tr>';
+    body.innerHTML = '<tr><td colspan="6">Sin ventas aún.</td></tr>';
     return;
   }
   sales.forEach((s) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${s.product}</td><td>${s.units}</td><td>S/ ${s.unitPrice.toFixed(2)}</td><td>S/ ${s.final.toFixed(2)}</td>`;
+    tr.innerHTML = `<td>${s.product}</td><td>${s.units}</td><td>S/ ${s.unitPrice.toFixed(2)}</td><td>S/ ${s.final.toFixed(2)}</td><td>${formatPayMethod(s.method || 'cash')}</td><td>${s.date || '-'}</td>`;
     body.appendChild(tr);
   });
 }
@@ -782,20 +806,26 @@ salesForm.addEventListener('submit', (e) => {
   const product = byId('productName').value.trim();
   const units = Number(byId('unitsSold').value);
   const unitPrice = Number(byId('unitPrice').value);
+  const method = byId('salesPayMethod').value;
+  const date = byId('saleDate').value;
 
   const errors = [];
   if (!product) errors.push('Producto obligatorio.');
   if (!Number.isFinite(units) || units <= 0) errors.push('Unidades inválidas.');
   if (!Number.isFinite(unitPrice) || unitPrice < 0) errors.push('Precio unitario inválido.');
+  if (!date) errors.push('Fecha de venta obligatoria.');
   showError(salesError, errors);
   if (errors.length) return;
 
   const sales = getStored(STORAGE_KEYS.SALES);
-  sales.push({ product, units, unitPrice, final: Number(byId('finalPrice').value) });
+  sales.push({ product, units, unitPrice, final: Number(byId('finalPrice').value), method, date });
   setStored(STORAGE_KEYS.SALES, sales);
   renderSales();
   salesForm.reset();
   byId('finalPrice').value = '0.00';
+  byId('salesPayMethod').value = 'cash';
+  byId('saleDate').value = new Date().toISOString().slice(0, 10);
+  renderClosure();
 });
 
 byId('unitsSold').addEventListener('input', calcSaleTotal);
@@ -810,15 +840,22 @@ function renderStaffTable() {
   const movements = getStored(STORAGE_KEYS.STAFF);
   body.innerHTML = '';
   if (movements.length === 0) {
-    body.innerHTML = '<tr><td colspan="4">Sin movimientos aún.</td></tr>';
+    body.innerHTML = '<tr><td colspan="5">Sin movimientos aún.</td></tr>';
     return;
   }
 
   movements.forEach((m) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.staffName}</td><td>${m.product}</td><td>S/ ${Number(m.cash).toFixed(2)}</td><td>${m.date}</td>`;
+    tr.innerHTML = `<td>${m.staffName}</td><td>${m.product}</td><td>S/ ${Number(m.cash).toFixed(2)}</td><td>${m.date}</td><td><button type="button" class="mini-btn danger" data-delete-staff="${m.id}">Borrar</button></td>`;
     body.appendChild(tr);
   });
+}
+
+function deleteStaffMovement(id) {
+  const staff = getStored(STORAGE_KEYS.STAFF).filter((m) => m.id !== id);
+  setStored(STORAGE_KEYS.STAFF, staff);
+  renderStaffTable();
+  renderStaffByWorker();
 }
 
 function renderStaffByWorker() {
@@ -841,6 +878,12 @@ function renderStaffByWorker() {
     return `<article class="worker-card"><h4>${name}</h4><p class="muted">Movimientos: ${items.length} · Total: S/ ${total.toFixed(2)}</p><ul>${list}</ul></article>`;
   }).join('');
 }
+
+byId('staff-table-body')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-delete-staff]');
+  if (!btn) return;
+  deleteStaffMovement(btn.dataset.deleteStaff);
+});
 
 staffForm?.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -865,6 +908,62 @@ staffForm?.addEventListener('submit', (e) => {
   renderStaffTable();
   renderStaffByWorker();
 });
+
+// -------- Cierre de caja --------
+function sumByMethod(items) {
+  return items.reduce((acc, item) => {
+    const method = item.method === 'yape' ? 'yape' : 'cash';
+    acc.total += item.amount;
+    acc[method] += item.amount;
+    return acc;
+  }, { total: 0, cash: 0, yape: 0 });
+}
+
+function renderClosureBox(el, title, dayItems, monthItems) {
+  const day = sumByMethod(dayItems);
+  const month = sumByMethod(monthItems);
+  el.innerHTML = `
+    <div class="stat"><span class="label">Por día</span><span class="value">S/ ${day.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Por mes</span><span class="value">S/ ${month.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Efectivo</span><span class="value">S/ ${month.cash.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Yape</span><span class="value">S/ ${month.yape.toFixed(2)}</span></div>
+  `;
+}
+
+function collectMembershipPayments(serviceKeyFilter) {
+  const records = [...getStored(STORAGE_KEYS.ACTIVE), ...getStored(STORAGE_KEYS.PENDING)];
+  const list = [];
+  records.filter((r) => serviceKeyFilter.includes(r.serviceKey)).forEach((record) => {
+    const history = Array.isArray(record.paymentHistory) && record.paymentHistory.length
+      ? record.paymentHistory
+      : (Number(record.paid) > 0 ? [{ amount: Number(record.paid), method: record.paymentMethod || 'cash', date: record.startDate }] : []);
+    history.forEach((h) => list.push({ amount: Number(h.amount || 0), method: h.method || 'cash', date: h.date || record.startDate }));
+  });
+  return list;
+}
+
+function filterByDay(items, isoDate) {
+  return items.filter((i) => i.date === isoDate);
+}
+
+function filterByMonth(items, yearMonth) {
+  return items.filter((i) => (i.date || '').slice(0, 7) === yearMonth);
+}
+
+function renderClosure() {
+  const today = new Date().toISOString().slice(0, 10);
+  const yearMonth = today.slice(0, 7);
+
+  const maquinasPayments = collectMembershipPayments(['maquinas']);
+  const baileJumpingPayments = collectMembershipPayments(['baile_jumping']);
+  const salesPayments = getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
+
+  renderClosureBox(byId('closure-maquinas'), 'Máquinas', filterByDay(maquinasPayments, today), filterByMonth(maquinasPayments, yearMonth));
+  renderClosureBox(byId('closure-baile-jumping'), 'Baile y jumping', filterByDay(baileJumpingPayments, today), filterByMonth(baileJumpingPayments, yearMonth));
+  renderClosureBox(byId('closure-ventas'), 'Ventas', filterByDay(salesPayments, today), filterByMonth(salesPayments, yearMonth));
+}
+
+byId('refresh-closure-btn')?.addEventListener('click', renderClosure);
 
 // -------- Búsqueda --------
 const searchInput = byId('searchInput');
@@ -902,4 +1001,6 @@ renderSales();
 renderExpiryAlerts();
 renderStaffTable();
 renderStaffByWorker();
+if (byId('saleDate')) byId('saleDate').value = new Date().toISOString().slice(0, 10);
+renderClosure();
 setupCsvTools();
