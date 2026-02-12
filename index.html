@@ -232,7 +232,39 @@
       <section id="reports-section" class="app-section hidden">
         <section class="card">
           <h2>Reportes</h2>
-          <p class="muted">Sección reservada para reportes adicionales.</p>
+          <p class="muted">Resumen mensual por servicios, pendientes, ventas, personal y caja consolidada.</p>
+          <div class="actions"><button type="button" id="export-reports-btn">Exportar reporte (CSV)</button></div>
+        </section>
+
+        <section class="card">
+          <h3>Reporte mensual por servicio (inscripciones)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Servicio</th><th>Registros</th><th>Total cobrado</th></tr></thead>
+              <tbody id="report-service-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Pagos pendientes</h3>
+          <p id="report-pending-total" class="muted"></p>
+          <div id="report-pending-list" class="list-stack muted">Sin deudas pendientes.</div>
+        </section>
+
+        <section class="card">
+          <h3>Top productos vendidos</h3>
+          <div id="report-top-products" class="list-stack muted">Sin ventas registradas.</div>
+        </section>
+
+        <section class="card">
+          <h3>Reporte de personal</h3>
+          <div id="report-staff-summary" class="list-stack muted">Sin movimientos del personal.</div>
+        </section>
+
+        <section class="card">
+          <h3>Caja consolidada (mes actual)</h3>
+          <div id="report-cash-summary" class="list-stack muted"></div>
         </section>
       </section>
 

@@ -41,6 +41,7 @@ Sistema web para gimnasio con **8 secciones**:
 - Módulo de ventas con cálculo automático de precio final (`unidades x precio unitario`).
 - Control de personal del gym con registro de consumo/adelantos y vista agrupada por trabajador.
 - Cierre de caja con resumen diario/mensual por: máquinas, baile+jumping y ventas, separado por efectivo y yape.
+- Reportes con: resumen mensual por servicio, deudas pendientes, top productos, resumen por trabajador y caja consolidada exportable a CSV.
 - En plan nutricional se restauró la sección inicial y se ampliaron las comidas recomendadas con mayor detalle: porción, macros por porción, kcal aproximadas, costo estimado, región sugerida y momento de consumo.
 
 ## Ejecución

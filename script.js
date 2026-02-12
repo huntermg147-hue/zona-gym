@@ -603,6 +603,7 @@ function removeActive(id) {
   renderActiveTable();
   renderSearchResults();
   renderExpiryAlerts();
+  renderReports();
 }
 
 function renderActiveTable() {
@@ -733,6 +734,7 @@ function deletePending(id) {
   setStored(STORAGE_KEYS.PENDING, pending);
   renderPendingTable();
   renderSearchResults();
+  renderReports();
 }
 
 byId('pending-table-body').addEventListener('click', (e) => {
@@ -847,6 +849,7 @@ function deleteStaffMovement(id) {
   setStored(STORAGE_KEYS.STAFF, staff);
   renderStaffTable();
   renderStaffByWorker();
+  renderReports();
 }
 
 function renderStaffByWorker() {
@@ -898,6 +901,7 @@ staffForm?.addEventListener('submit', (e) => {
   staffForm.reset();
   renderStaffTable();
   renderStaffByWorker();
+  renderReports();
 });
 
 // -------- Cierre de caja --------
@@ -952,9 +956,175 @@ function renderClosure() {
   renderClosureBox(byId('closure-maquinas'), 'Máquinas', filterByDay(maquinasPayments, today), filterByMonth(maquinasPayments, yearMonth));
   renderClosureBox(byId('closure-baile-jumping'), 'Baile y jumping', filterByDay(baileJumpingPayments, today), filterByMonth(baileJumpingPayments, yearMonth));
   renderClosureBox(byId('closure-ventas'), 'Ventas', filterByDay(salesPayments, today), filterByMonth(salesPayments, yearMonth));
+  renderReports();
 }
 
 byId('refresh-closure-btn')?.addEventListener('click', renderClosure);
+
+// -------- Reportes --------
+function getCurrentYearMonth() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+function serviceMonthlyReport() {
+  const yearMonth = getCurrentYearMonth();
+  const records = [...getStored(STORAGE_KEYS.ACTIVE), ...getStored(STORAGE_KEYS.PENDING)]
+    .filter((r) => (r.startDate || '').slice(0, 7) === yearMonth);
+
+  const grouped = records.reduce((acc, r) => {
+    const key = r.serviceKey || 'otro';
+    if (!acc[key]) acc[key] = { label: r.service || key, count: 0, total: 0 };
+    acc[key].count += 1;
+    acc[key].total += Number(r.total || 0);
+    return acc;
+  }, {});
+
+  return Object.values(grouped).sort((a, b) => b.total - a.total);
+}
+
+function pendingMonthlyReport() {
+  const yearMonth = getCurrentYearMonth();
+  const pending = getStored(STORAGE_KEYS.PENDING)
+    .filter((r) => (r.startDate || '').slice(0, 7) === yearMonth);
+  const debt = pending.reduce((sum, p) => sum + Number(p.balance || 0), 0);
+  return { pending, debt };
+}
+
+function topProductsReport() {
+  const yearMonth = getCurrentYearMonth();
+  const sales = getStored(STORAGE_KEYS.SALES)
+    .filter((s) => (s.date || '').slice(0, 7) === yearMonth);
+
+  const grouped = sales.reduce((acc, s) => {
+    const key = s.product || 'Sin nombre';
+    if (!acc[key]) acc[key] = { name: key, units: 0, total: 0 };
+    acc[key].units += Number(s.units || 0);
+    acc[key].total += Number(s.final || 0);
+    return acc;
+  }, {});
+
+  const list = Object.values(grouped);
+  const byUnits = [...list].sort((a, b) => b.units - a.units)[0] || null;
+  const byRevenue = [...list].sort((a, b) => b.total - a.total)[0] || null;
+  return { byUnits, byRevenue };
+}
+
+function staffMonthlyReport() {
+  const yearMonth = getCurrentYearMonth();
+  const staff = getStored(STORAGE_KEYS.STAFF)
+    .filter((s) => (s.date || '').slice(0, 7) === yearMonth);
+
+  const grouped = staff.reduce((acc, s) => {
+    const key = s.staffName || 'Sin nombre';
+    if (!acc[key]) acc[key] = { name: key, moves: 0, total: 0 };
+    acc[key].moves += 1;
+    acc[key].total += Number(s.cash || 0);
+    return acc;
+  }, {});
+
+  return Object.values(grouped).sort((a, b) => b.total - a.total);
+}
+
+function cashConsolidatedMonthlyReport() {
+  const yearMonth = getCurrentYearMonth();
+  const maquinas = filterByMonth(collectMembershipPayments(['maquinas']), yearMonth);
+  const baileJumping = filterByMonth(collectMembershipPayments(['baile_jumping']), yearMonth);
+  const ventas = filterByMonth(
+    getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' })),
+    yearMonth
+  );
+
+  return {
+    maquinas: sumByMethod(maquinas),
+    baileJumping: sumByMethod(baileJumping),
+    ventas: sumByMethod(ventas)
+  };
+}
+
+function renderReports() {
+  const serviceBody = byId('report-service-body');
+  const pendingTotal = byId('report-pending-total');
+  const pendingList = byId('report-pending-list');
+  const topProducts = byId('report-top-products');
+  const staffSummary = byId('report-staff-summary');
+  const cashSummary = byId('report-cash-summary');
+
+  if (!serviceBody || !pendingTotal || !pendingList || !topProducts || !staffSummary || !cashSummary) return;
+
+  const serviceReport = serviceMonthlyReport();
+  serviceBody.innerHTML = serviceReport.length
+    ? serviceReport.map((s) => `<tr><td>${s.label}</td><td>${s.count}</td><td>S/ ${s.total.toFixed(2)}</td></tr>`).join('')
+    : '<tr><td colspan="3">Sin inscripciones este mes.</td></tr>';
+
+  const pendingReport = pendingMonthlyReport();
+  pendingTotal.textContent = `Deuda acumulada del mes: S/ ${pendingReport.debt.toFixed(2)}.`;
+  pendingList.innerHTML = pendingReport.pending.length
+    ? pendingReport.pending.map((p) => `<div class="alert-item"><strong>${p.fullName}</strong> · Cel: ${p.phone || p.dni || '-'} · Saldo: S/ ${Number(p.balance || 0).toFixed(2)}</div>`).join('')
+    : 'Sin deudas pendientes.';
+
+  const top = topProductsReport();
+  topProducts.innerHTML = top.byUnits || top.byRevenue
+    ? `
+      <div class="alert-item"><strong>Más vendido (unidades):</strong> ${top.byUnits ? `${top.byUnits.name} (${top.byUnits.units} und)` : 'Sin datos'}</div>
+      <div class="alert-item"><strong>Más rentable (monto):</strong> ${top.byRevenue ? `${top.byRevenue.name} (S/ ${top.byRevenue.total.toFixed(2)})` : 'Sin datos'}</div>
+    `
+    : 'Sin ventas registradas.';
+
+  const staff = staffMonthlyReport();
+  staffSummary.innerHTML = staff.length
+    ? staff.map((s) => `<div class="alert-item"><strong>${s.name}</strong> · Movimientos: ${s.moves} · Total: S/ ${s.total.toFixed(2)}</div>`).join('')
+    : 'Sin movimientos del personal.';
+
+  const cash = cashConsolidatedMonthlyReport();
+  cashSummary.innerHTML = `
+    <div class="alert-item"><strong>Máquinas:</strong> Total S/ ${cash.maquinas.total.toFixed(2)} · Efectivo S/ ${cash.maquinas.cash.toFixed(2)} · Yape S/ ${cash.maquinas.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Baile + jumping:</strong> Total S/ ${cash.baileJumping.total.toFixed(2)} · Efectivo S/ ${cash.baileJumping.cash.toFixed(2)} · Yape S/ ${cash.baileJumping.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Ventas:</strong> Total S/ ${cash.ventas.total.toFixed(2)} · Efectivo S/ ${cash.ventas.cash.toFixed(2)} · Yape S/ ${cash.ventas.yape.toFixed(2)}</div>
+  `;
+}
+
+function exportReportsCsv() {
+  const ym = getCurrentYearMonth();
+  const lines = ['categoria,detalle,valor'];
+
+  serviceMonthlyReport().forEach((s) => {
+    lines.push(`servicio,${s.label} registros,${s.count}`);
+    lines.push(`servicio,${s.label} total,S/ ${s.total.toFixed(2)}`);
+  });
+
+  const pending = pendingMonthlyReport();
+  lines.push(`pendientes,deuda acumulada,S/ ${pending.debt.toFixed(2)}`);
+  pending.pending.forEach((p) => lines.push(`pendientes,${p.fullName} saldo,S/ ${Number(p.balance || 0).toFixed(2)}`));
+
+  const top = topProductsReport();
+  if (top.byUnits) lines.push(`ventas,top unidades,${top.byUnits.name} (${top.byUnits.units})`);
+  if (top.byRevenue) lines.push(`ventas,top monto,${top.byRevenue.name} (S/ ${top.byRevenue.total.toFixed(2)})`);
+
+  staffMonthlyReport().forEach((s) => lines.push(`personal,${s.name},mov:${s.moves} total:S/ ${s.total.toFixed(2)}`));
+
+  const cash = cashConsolidatedMonthlyReport();
+  lines.push(`caja,maquinas total,S/ ${cash.maquinas.total.toFixed(2)}`);
+  lines.push(`caja,maquinas efectivo,S/ ${cash.maquinas.cash.toFixed(2)}`);
+  lines.push(`caja,maquinas yape,S/ ${cash.maquinas.yape.toFixed(2)}`);
+  lines.push(`caja,baile+jumping total,S/ ${cash.baileJumping.total.toFixed(2)}`);
+  lines.push(`caja,baile+jumping efectivo,S/ ${cash.baileJumping.cash.toFixed(2)}`);
+  lines.push(`caja,baile+jumping yape,S/ ${cash.baileJumping.yape.toFixed(2)}`);
+  lines.push(`caja,ventas total,S/ ${cash.ventas.total.toFixed(2)}`);
+  lines.push(`caja,ventas efectivo,S/ ${cash.ventas.cash.toFixed(2)}`);
+  lines.push(`caja,ventas yape,S/ ${cash.ventas.yape.toFixed(2)}`);
+
+  const blob = new Blob([`\ufeff${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `zona-gym-reportes-${ym}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+byId('export-reports-btn')?.addEventListener('click', exportReportsCsv);
 
 // -------- Búsqueda --------
 const searchInput = byId('searchInput');
@@ -994,4 +1164,5 @@ renderStaffTable();
 renderStaffByWorker();
 if (byId('saleDate')) byId('saleDate').value = new Date().toISOString().slice(0, 10);
 renderClosure();
+renderReports();
 setupCsvTools();
