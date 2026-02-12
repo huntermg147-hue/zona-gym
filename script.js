@@ -769,12 +769,12 @@ function renderSales() {
   const sales = getStored(STORAGE_KEYS.SALES);
   body.innerHTML = '';
   if (sales.length === 0) {
-    body.innerHTML = '<tr><td colspan="6">Sin ventas aún.</td></tr>';
+    body.innerHTML = '<tr><td colspan="7">Sin ventas aún.</td></tr>';
     return;
   }
-  sales.forEach((s) => {
+  sales.forEach((s, index) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${s.product}</td><td>${s.units}</td><td>S/ ${s.unitPrice.toFixed(2)}</td><td>S/ ${s.final.toFixed(2)}</td><td>${formatPayMethod(s.method || 'cash')}</td><td>${s.date || '-'}</td>`;
+    tr.innerHTML = `<td>${s.product}</td><td>${s.units}</td><td>S/ ${s.unitPrice.toFixed(2)}</td><td>S/ ${s.final.toFixed(2)}</td><td>${formatPayMethod(s.method || 'cash')}</td><td>${s.date || '-'}</td><td><button type="button" class="mini-btn danger" data-delete-sale-index="${index}">Borrar</button></td>`;
     body.appendChild(tr);
   });
 }
@@ -797,7 +797,7 @@ salesForm.addEventListener('submit', (e) => {
   if (errors.length) return;
 
   const sales = getStored(STORAGE_KEYS.SALES);
-  sales.push({ product, units, unitPrice, final: Number(byId('finalPrice').value), method, date });
+  sales.push({ id: generateId(), product, units, unitPrice, final: Number(byId('finalPrice').value), method, date });
   setStored(STORAGE_KEYS.SALES, sales);
   renderSales();
   salesForm.reset();
@@ -809,6 +809,18 @@ salesForm.addEventListener('submit', (e) => {
 
 byId('unitsSold').addEventListener('input', calcSaleTotal);
 byId('unitPrice').addEventListener('input', calcSaleTotal);
+
+byId('sales-table-body').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-delete-sale-index]');
+  if (!btn) return;
+    const sales = getStored(STORAGE_KEYS.SALES);
+  const idx = Number(btn.dataset.deleteSaleIndex);
+  if (!Number.isInteger(idx) || idx < 0 || idx >= sales.length) return;
+  sales.splice(idx, 1);
+  setStored(STORAGE_KEYS.SALES, sales);
+  renderSales();
+  renderClosure();
+});
 
 // -------- Personal gym --------
 const staffForm = byId('staff-form');
