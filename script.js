@@ -512,6 +512,12 @@ function getServicePrice(serviceKey, people) {
   return people === '2plus' ? s.promo2plus : s.regular;
 }
 
+function getEffectiveRegisterTotal(defaultPrice) {
+  const custom = Number(byId('customPrice').value || 0);
+  if (Number.isFinite(custom) && custom > 0) return custom;
+  return defaultPrice;
+}
+
 function calculateEndDate(startISO) {
   if (!startISO) return '';
   const d = new Date(`${startISO}T00:00:00`);
@@ -523,11 +529,12 @@ function refreshRegisterCalc() {
   const serviceKey = byId('serviceType').value;
   const people = byId('peopleCount').value;
   const price = getServicePrice(serviceKey, people);
+  const total = getEffectiveRegisterTotal(price);
   const paid = Number(byId('advancePaid').value || 0);
 
   byId('basePrice').value = price;
-  byId('totalPay').value = price;
-  byId('balance').value = Math.max(price - paid, 0).toFixed(2);
+  byId('totalPay').value = total.toFixed(2);
+  byId('balance').value = Math.max(total - paid, 0).toFixed(2);
   byId('endDate').value = calculateEndDate(byId('startDate').value);
 }
 
@@ -538,13 +545,16 @@ function validateRegister() {
   const serviceKey = byId('serviceType').value;
   const people = byId('peopleCount').value;
   const paid = Number(byId('advancePaid').value || 0);
-  const total = getServicePrice(serviceKey, people);
+  const baseTotal = getServicePrice(serviceKey, people);
+  const customPrice = Number(byId('customPrice').value || 0);
+  const total = getEffectiveRegisterTotal(baseTotal);
 
   if (!name) errors.push('Nombre obligatorio.');
   if (!phone) errors.push('Celular obligatorio.');
   if (!byId('startDate').value) errors.push('Fecha de inscripción obligatoria.');
   if (!serviceKey) errors.push('Selecciona servicio.');
   if (Number.isNaN(paid) || paid < 0) errors.push('Adelanto inválido.');
+  if (Number.isFinite(customPrice) && customPrice < 0) errors.push('Precio acordado inválido.');
   if (paid > total) errors.push('Adelanto no puede ser mayor al total.');
 
   return errors;
@@ -563,7 +573,8 @@ function showError(el, messages) {
 function currentRegisterData() {
   const serviceKey = byId('serviceType').value;
   const people = byId('peopleCount').value;
-  const total = getServicePrice(serviceKey, people);
+  const baseTotal = getServicePrice(serviceKey, people);
+  const total = getEffectiveRegisterTotal(baseTotal);
   const paid = Number(byId('advancePaid').value || 0);
   const balance = Math.max(total - paid, 0);
   return {
@@ -575,6 +586,7 @@ function currentRegisterData() {
     people,
     startDate: byId('startDate').value,
     endDate: byId('endDate').value,
+    baseTotal,
     total,
     paid,
     balance,
@@ -655,6 +667,7 @@ registerForm.addEventListener('submit', (e) => {
   registerForm.reset();
   byId('peopleCount').value = '1';
   byId('advancePaid').value = '0';
+  byId('customPrice').value = '';
   byId('registerPayMethod').value = 'cash';
   refreshRegisterCalc();
 
@@ -665,7 +678,7 @@ registerForm.addEventListener('submit', (e) => {
   renderClosure();
 });
 
-['serviceType', 'peopleCount', 'startDate', 'advancePaid'].forEach((id) => byId(id).addEventListener('input', refreshRegisterCalc));
+['serviceType', 'peopleCount', 'startDate', 'advancePaid', 'customPrice'].forEach((id) => byId(id).addEventListener('input', refreshRegisterCalc));
 ['serviceType', 'peopleCount', 'startDate'].forEach((id) => byId(id).addEventListener('change', refreshRegisterCalc));
 
 byId('register-table-body').addEventListener('click', (e) => {

@@ -29,6 +29,7 @@ Sistema web para gimnasio con **8 secciones**:
 ## Funcionalidades agregadas
 
 - En Registro de gym se usa **número de celular** en lugar de DNI.
+- En Registro puedes usar **Precio acordado (opcional)** para casos especiales; si está vacío, se usa la tarifa base automática.
 - Botón para borrar registros de gym **por persona** (no borra todo).
 - Sección de pagos pendientes para usuarios con adelanto parcial.
 - Si el adelanto es `0`, la inscripción se guarda en Registro de gym (no pasa a pendientes).
