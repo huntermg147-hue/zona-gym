@@ -230,6 +230,10 @@ function toCsvValue(value) {
   return `"${str.replaceAll('"', '""')}"`;
 }
 
+function getCsvDelimiter() {
+  return ';';
+}
+
 function normalizeNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -250,10 +254,11 @@ function buildCsvRows() {
 function exportToCsv() {
   const rows = buildCsvRows();
   const headers = ['source', 'id', 'fullName', 'phone', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'paymentMethod', 'paymentHistory', 'product', 'units', 'unitPrice', 'final', 'saleMethod', 'saleDate', 'staffName', 'staffProduct', 'staffCash', 'staffDate'];
-  const lines = [headers.join(',')];
+  const delimiter = getCsvDelimiter();
+  const lines = [headers.join(delimiter)];
 
   rows.forEach((row) => {
-    const line = headers.map((header) => toCsvValue(row[header] ?? '')).join(',');
+    const line = headers.map((header) => toCsvValue(row[header] ?? '')).join(delimiter);
     lines.push(line);
   });
 
@@ -270,7 +275,7 @@ function exportToCsv() {
   setCsvMessage(`Exportación completada: ${rows.length} registros.`);
 }
 
-function parseCsvLine(line) {
+function parseCsvLine(line, delimiter = ',') {
   const values = [];
   let current = '';
   let inQuotes = false;
@@ -284,7 +289,7 @@ function parseCsvLine(line) {
       i += 1;
     } else if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       values.push(current);
       current = '';
     } else {
@@ -303,7 +308,8 @@ function importFromCsvText(csvText) {
   const lines = cleaned.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) throw new Error('El CSV no contiene filas para importar.');
 
-  const headers = parseCsvLine(lines[0]).map((h) => h.trim());
+  const delimiter = lines[0].includes(';') ? ';' : ',';
+  const headers = parseCsvLine(lines[0], delimiter).map((h) => h.trim());
   const required = ['source'];
   if (!required.every((h) => headers.includes(h))) {
     throw new Error('CSV inválido: falta la columna source.');
@@ -315,7 +321,7 @@ function importFromCsvText(csvText) {
   const staff = [];
 
   for (let i = 1; i < lines.length; i += 1) {
-    const values = parseCsvLine(lines[i]);
+    const values = parseCsvLine(lines[i], delimiter);
     const row = Object.fromEntries(headers.map((h, idx) => [h, values[idx] ?? '']));
 
     if (row.source === 'staff') {
@@ -1098,33 +1104,34 @@ function renderReports() {
 
 function exportReportsCsv() {
   const ym = getCurrentYearMonth();
-  const lines = ['categoria,detalle,valor'];
+  const delimiter = getCsvDelimiter();
+  const lines = [['categoria', 'detalle', 'valor'].join(delimiter)];
 
   serviceMonthlyReport().forEach((s) => {
-    lines.push(`servicio,${s.label} registros,${s.count}`);
-    lines.push(`servicio,${s.label} total,S/ ${s.total.toFixed(2)}`);
+    lines.push(['servicio', `${s.label} registros`, `${s.count}`].join(delimiter));
+    lines.push(['servicio', `${s.label} total`, `S/ ${s.total.toFixed(2)}`].join(delimiter));
   });
 
   const pending = pendingMonthlyReport();
-  lines.push(`pendientes,deuda acumulada,S/ ${pending.debt.toFixed(2)}`);
-  pending.pending.forEach((p) => lines.push(`pendientes,${p.fullName} saldo,S/ ${Number(p.balance || 0).toFixed(2)}`));
+  lines.push(['pendientes', 'deuda acumulada', `S/ ${pending.debt.toFixed(2)}`].join(delimiter));
+  pending.pending.forEach((p) => lines.push(['pendientes', `${p.fullName} saldo`, `S/ ${Number(p.balance || 0).toFixed(2)}`].join(delimiter)));
 
   const top = topProductsReport();
-  if (top.byUnits) lines.push(`ventas,top unidades,${top.byUnits.name} (${top.byUnits.units})`);
-  if (top.byRevenue) lines.push(`ventas,top monto,${top.byRevenue.name} (S/ ${top.byRevenue.total.toFixed(2)})`);
+  if (top.byUnits) lines.push(['ventas', 'top unidades', `${top.byUnits.name} (${top.byUnits.units})`].join(delimiter));
+  if (top.byRevenue) lines.push(['ventas', 'top monto', `${top.byRevenue.name} (S/ ${top.byRevenue.total.toFixed(2)})`].join(delimiter));
 
-  staffMonthlyReport().forEach((s) => lines.push(`personal,${s.name},mov:${s.moves} total:S/ ${s.total.toFixed(2)}`));
+  staffMonthlyReport().forEach((s) => lines.push(['personal', `${s.name}`, `mov:${s.moves} total:S/ ${s.total.toFixed(2)}`].join(delimiter)));
 
   const cash = cashConsolidatedMonthlyReport();
-  lines.push(`caja,maquinas total,S/ ${cash.maquinas.total.toFixed(2)}`);
-  lines.push(`caja,maquinas efectivo,S/ ${cash.maquinas.cash.toFixed(2)}`);
-  lines.push(`caja,maquinas yape,S/ ${cash.maquinas.yape.toFixed(2)}`);
-  lines.push(`caja,baile+jumping total,S/ ${cash.baileJumping.total.toFixed(2)}`);
-  lines.push(`caja,baile+jumping efectivo,S/ ${cash.baileJumping.cash.toFixed(2)}`);
-  lines.push(`caja,baile+jumping yape,S/ ${cash.baileJumping.yape.toFixed(2)}`);
-  lines.push(`caja,ventas total,S/ ${cash.ventas.total.toFixed(2)}`);
-  lines.push(`caja,ventas efectivo,S/ ${cash.ventas.cash.toFixed(2)}`);
-  lines.push(`caja,ventas yape,S/ ${cash.ventas.yape.toFixed(2)}`);
+  lines.push(['caja', 'maquinas total', `S/ ${cash.maquinas.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'maquinas efectivo', `S/ ${cash.maquinas.cash.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'maquinas yape', `S/ ${cash.maquinas.yape.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'baile+jumping total', `S/ ${cash.baileJumping.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'baile+jumping efectivo', `S/ ${cash.baileJumping.cash.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'baile+jumping yape', `S/ ${cash.baileJumping.yape.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'ventas total', `S/ ${cash.ventas.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'ventas efectivo', `S/ ${cash.ventas.cash.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'ventas yape', `S/ ${cash.ventas.yape.toFixed(2)}`].join(delimiter));
 
   const blob = new Blob([`\ufeff${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
