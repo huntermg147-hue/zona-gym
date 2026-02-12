@@ -506,10 +506,6 @@ gymForm.addEventListener('submit', (e) => {
 // -------- Registro --------
 const registerForm = byId('register-form');
 const registerError = byId('register-error');
-const summaryModal = byId('summary-modal');
-const summaryContent = byId('summary-content');
-const closeModalBtn = byId('close-modal-btn');
-
 function getServicePrice(serviceKey, people) {
   const s = serviceCatalog[serviceKey];
   if (!s) return 0;
@@ -563,9 +559,6 @@ function showError(el, messages) {
     el.textContent = messages.join(' ');
   }
 }
-
-function openModal() { summaryModal.classList.remove('hidden'); }
-function closeModal() { summaryModal.classList.add('hidden'); }
 
 function currentRegisterData() {
   const serviceKey = byId('serviceType').value;
@@ -657,8 +650,6 @@ registerForm.addEventListener('submit', (e) => {
   const record = currentRegisterData();
   pushRegistration(record);
 
-  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${record.fullName}</p><p><strong>Celular:</strong> ${record.phone || '-'}</p><p><strong>Servicio:</strong> ${record.service}</p><p><strong>Total:</strong> S/ ${record.total.toFixed(2)}</p><p><strong>Pagado:</strong> S/ ${record.paid.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${record.balance.toFixed(2)}</p><p><strong>Método adelanto:</strong> ${formatPayMethod(record.paymentMethod)}</p>`;
-  openModal();
 
   registerForm.reset();
   byId('peopleCount').value = '1';
@@ -673,20 +664,8 @@ registerForm.addEventListener('submit', (e) => {
   renderClosure();
 });
 
-byId('preview-btn').addEventListener('click', () => {
-  const errors = validateRegister();
-  showError(registerError, errors);
-  if (errors.length) return;
-  const r = currentRegisterData();
-  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${r.fullName}</p><p><strong>Total:</strong> S/ ${r.total.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${r.balance.toFixed(2)}</p>`;
-  openModal();
-});
-
 ['serviceType', 'peopleCount', 'startDate', 'advancePaid'].forEach((id) => byId(id).addEventListener('input', refreshRegisterCalc));
 ['serviceType', 'peopleCount', 'startDate'].forEach((id) => byId(id).addEventListener('change', refreshRegisterCalc));
-
-closeModalBtn.addEventListener('click', closeModal);
-summaryModal.addEventListener('click', (e) => { if (e.target === summaryModal) closeModal(); });
 
 byId('register-table-body').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-delete-active]');
