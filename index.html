@@ -11,7 +11,7 @@
       <section class="hero">
         <p class="badge">PLANIFICADOR FITNESS</p>
         <h1>Zona Gym Pro</h1>
-        <p>Sistema con 5 secciones: plan nutricional, registro, ventas, pagos pendientes y búsqueda de usuarios.</p>
+        <p>Sistema con 6 secciones: plan nutricional, registro, ventas, pagos pendientes, búsqueda de usuarios y control de personal.</p>
       </section>
 
       <nav class="section-tabs" aria-label="Secciones principales">
@@ -20,6 +20,7 @@
         <button class="tab-btn" type="button" data-target="sales-section">Ventas</button>
         <button class="tab-btn" type="button" data-target="pending-section">Pagos pendientes</button>
         <button class="tab-btn" type="button" data-target="search-section">Buscar usuario</button>
+        <button class="tab-btn" type="button" data-target="staff-section">Personal gym</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -79,7 +80,7 @@
           <form id="register-form" novalidate>
             <div class="grid">
               <label>Nombre y apellido<input type="text" id="fullName" required /></label>
-              <label>DNI o identificación<input type="text" id="dni" required /></label>
+              <label>Número de celular<input type="tel" id="phone" inputmode="numeric" placeholder="Ej: 987654321" required /></label>
               <label>Fecha de inscripción<input type="date" id="startDate" required /></label>
               <label>
                 Tipo de servicio
@@ -130,7 +131,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Acción</th>
+                  <th>Cliente</th><th>Celular</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Acción</th>
                 </tr>
               </thead>
               <tbody id="register-table-body"></tbody>
@@ -173,7 +174,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Cliente</th><th>DNI</th><th>Servicio</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Agregar pago</th><th>Acción</th>
+                  <th>Cliente</th><th>Celular</th><th>Servicio</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Agregar pago</th><th>Acción</th>
                 </tr>
               </thead>
               <tbody id="pending-table-body"></tbody>
@@ -186,11 +187,43 @@
         <section class="card form-card">
           <h2>Búsqueda de usuario</h2>
           <div class="grid">
-            <label>Buscar por nombre o DNI<input type="text" id="searchInput" placeholder="Ej: María o 12345678" /></label>
+            <label>Buscar por nombre o celular<input type="text" id="searchInput" placeholder="Ej: María o 987654321" /></label>
           </div>
           <div id="search-results" class="list-stack muted" style="margin-top: 1rem;">Escribe un criterio para buscar.</div>
         </section>
       </section>
+
+      <section id="staff-section" class="app-section hidden">
+        <section class="card form-card">
+          <h2>Control de personal del gym</h2>
+          <form id="staff-form" novalidate>
+            <div class="grid">
+              <label>Nombre del personal<input type="text" id="staffName" required /></label>
+              <label>Producto que consumió<input type="text" id="staffProduct" required /></label>
+              <label>Efectivo que agarró o adelanto (S/)<input type="number" id="staffCash" min="0" step="0.01" required /></label>
+              <label>Fecha<input type="date" id="staffDate" required /></label>
+            </div>
+            <p id="staff-error" class="error-message hidden" role="alert"></p>
+            <div class="actions"><button type="submit">Guardar movimiento</button></div>
+          </form>
+        </section>
+
+        <section class="card">
+          <h3>Registro general del personal</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Personal</th><th>Producto</th><th>Efectivo</th><th>Fecha</th></tr></thead>
+              <tbody id="staff-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Control separado por trabajador</h3>
+          <div id="staff-by-worker" class="list-stack muted">Sin movimientos registrados.</div>
+        </section>
+      </section>
+
     </main>
 
     <div id="summary-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="summary-title">

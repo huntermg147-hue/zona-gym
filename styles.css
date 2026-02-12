@@ -419,3 +419,18 @@ th {
 .csv-error {
   color: #ffd3dc;
 }
+
+
+.worker-card {
+  border: 1px solid rgba(158, 176, 214, 0.24);
+  border-radius: 12px;
+  background: rgba(11, 21, 42, 0.85);
+  padding: 0.75rem;
+}
+
+.worker-card ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.25rem;
+}

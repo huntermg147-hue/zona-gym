@@ -1,7 +1,8 @@
 const STORAGE_KEYS = {
   ACTIVE: 'zonaGymActiveMembers',
   PENDING: 'zonaGymPendingMembers',
-  SALES: 'zonaGymSales'
+  SALES: 'zonaGymSales',
+  STAFF: 'zonaGymStaffMovements'
 };
 
 const serviceCatalog = {
@@ -238,12 +239,13 @@ function buildCsvRows() {
   const active = getStored(STORAGE_KEYS.ACTIVE).map((r) => ({ source: 'active', ...r }));
   const pending = getStored(STORAGE_KEYS.PENDING).map((r) => ({ source: 'pending', ...r }));
   const sales = getStored(STORAGE_KEYS.SALES).map((r) => ({ source: 'sales', ...r }));
-  return [...active, ...pending, ...sales];
+  const staff = getStored(STORAGE_KEYS.STAFF).map((r) => ({ source: 'staff', ...r }));
+  return [...active, ...pending, ...sales, ...staff];
 }
 
 function exportToCsv() {
   const rows = buildCsvRows();
-  const headers = ['source', 'id', 'fullName', 'dni', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'product', 'units', 'unitPrice', 'final'];
+  const headers = ['source', 'id', 'fullName', 'phone', 'serviceKey', 'service', 'people', 'startDate', 'endDate', 'total', 'paid', 'balance', 'product', 'units', 'unitPrice', 'final', 'staffName', 'staffProduct', 'staffCash', 'staffDate'];
   const lines = [headers.join(',')];
 
   rows.forEach((row) => {
@@ -306,10 +308,23 @@ function importFromCsvText(csvText) {
   const active = [];
   const pending = [];
   const sales = [];
+  const staff = [];
 
   for (let i = 1; i < lines.length; i += 1) {
     const values = parseCsvLine(lines[i]);
     const row = Object.fromEntries(headers.map((h, idx) => [h, values[idx] ?? '']));
+
+    if (row.source === 'staff') {
+      if (!row.staffName) continue;
+      staff.push({
+        id: row.id || generateId(),
+        staffName: row.staffName,
+        product: row.staffProduct || '',
+        cash: normalizeNumber(row.staffCash),
+        date: row.staffDate || ''
+      });
+      continue;
+    }
 
     if (row.source === 'sales') {
       if (!row.product) continue;
@@ -322,11 +337,11 @@ function importFromCsvText(csvText) {
       continue;
     }
 
-    if (!row.fullName || !row.dni) continue;
+    if (!row.fullName || !(row.phone || row.dni)) continue;
     const record = {
       id: row.id || generateId(),
       fullName: row.fullName,
-      dni: row.dni,
+      phone: row.phone || row.dni || '',
       serviceKey: row.serviceKey || '',
       service: row.service || '-',
       people: row.people || '1',
@@ -344,14 +359,17 @@ function importFromCsvText(csvText) {
   setStored(STORAGE_KEYS.ACTIVE, active);
   setStored(STORAGE_KEYS.PENDING, pending);
   setStored(STORAGE_KEYS.SALES, sales);
+  setStored(STORAGE_KEYS.STAFF, staff);
 
   renderActiveTable();
   renderPendingTable();
   renderSales();
   renderExpiryAlerts();
   renderSearchResults();
+  renderStaffTable();
+  renderStaffByWorker();
 
-  setCsvMessage(`Importación completada: activos ${active.length}, pendientes ${pending.length}, ventas ${sales.length}.`);
+  setCsvMessage(`Importación completada: activos ${active.length}, pendientes ${pending.length}, ventas ${sales.length}, personal ${staff.length}.`);
 }
 
 function setupCsvTools() {
@@ -505,14 +523,14 @@ function refreshRegisterCalc() {
 function validateRegister() {
   const errors = [];
   const name = byId('fullName').value.trim();
-  const dni = byId('dni').value.trim();
+  const phone = byId('phone').value.trim();
   const serviceKey = byId('serviceType').value;
   const people = byId('peopleCount').value;
   const paid = Number(byId('advancePaid').value || 0);
   const total = getServicePrice(serviceKey, people);
 
   if (!name) errors.push('Nombre obligatorio.');
-  if (!dni) errors.push('DNI obligatorio.');
+  if (!phone) errors.push('Celular obligatorio.');
   if (!byId('startDate').value) errors.push('Fecha de inscripción obligatoria.');
   if (!serviceKey) errors.push('Selecciona servicio.');
   if (Number.isNaN(paid) || paid < 0) errors.push('Adelanto inválido.');
@@ -543,7 +561,7 @@ function currentRegisterData() {
   return {
     id: generateId(),
     fullName: byId('fullName').value.trim(),
-    dni: byId('dni').value.trim(),
+    phone: byId('phone').value.trim(),
     serviceKey,
     service: serviceCatalog[serviceKey]?.label || '-',
     people,
@@ -588,7 +606,7 @@ function renderActiveTable() {
 
   active.forEach((r) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.fullName}</td><td>${r.dni}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
+    tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || '-'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
     body.appendChild(tr);
   });
 }
@@ -610,7 +628,7 @@ function renderExpiryAlerts() {
     return;
   }
 
-  el.innerHTML = alerts.map((r) => `<div class="alert-item">⚠️ ${r.fullName} vence el ${r.endDate} (DNI: ${r.dni})</div>`).join('');
+  el.innerHTML = alerts.map((r) => `<div class="alert-item">⚠️ ${r.fullName} vence el ${r.endDate} (Cel: ${r.phone || r.dni || '-'})</div>`).join('');
 }
 
 registerForm.addEventListener('submit', (e) => {
@@ -622,7 +640,7 @@ registerForm.addEventListener('submit', (e) => {
   const record = currentRegisterData();
   pushRegistration(record);
 
-  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${record.fullName}</p><p><strong>DNI:</strong> ${record.dni}</p><p><strong>Servicio:</strong> ${record.service}</p><p><strong>Total:</strong> S/ ${record.total.toFixed(2)}</p><p><strong>Pagado:</strong> S/ ${record.paid.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${record.balance.toFixed(2)}</p>`;
+  summaryContent.innerHTML = `<p><strong>Cliente:</strong> ${record.fullName}</p><p><strong>Celular:</strong> ${record.phone || '-'}</p><p><strong>Servicio:</strong> ${record.service}</p><p><strong>Total:</strong> S/ ${record.total.toFixed(2)}</p><p><strong>Pagado:</strong> S/ ${record.paid.toFixed(2)}</p><p><strong>Saldo:</strong> S/ ${record.balance.toFixed(2)}</p>`;
   openModal();
 
   registerForm.reset();
@@ -670,7 +688,7 @@ function renderPendingTable() {
   pending.forEach((p) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${p.fullName}</td><td>${p.dni}</td><td>${p.service}</td>
+      <td>${p.fullName}</td><td>${p.phone || p.dni || '-'}</td><td>${p.service}</td>
       <td>S/ ${p.total.toFixed(2)}</td><td>S/ ${p.paid.toFixed(2)}</td><td>S/ ${p.balance.toFixed(2)}</td>
       <td><input type="number" min="0" step="0.01" value="0" class="pay-input" data-pay-id="${p.id}" /></td>
       <td>
@@ -783,6 +801,71 @@ salesForm.addEventListener('submit', (e) => {
 byId('unitsSold').addEventListener('input', calcSaleTotal);
 byId('unitPrice').addEventListener('input', calcSaleTotal);
 
+// -------- Personal gym --------
+const staffForm = byId('staff-form');
+const staffError = byId('staff-error');
+
+function renderStaffTable() {
+  const body = byId('staff-table-body');
+  const movements = getStored(STORAGE_KEYS.STAFF);
+  body.innerHTML = '';
+  if (movements.length === 0) {
+    body.innerHTML = '<tr><td colspan="4">Sin movimientos aún.</td></tr>';
+    return;
+  }
+
+  movements.forEach((m) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${m.staffName}</td><td>${m.product}</td><td>S/ ${Number(m.cash).toFixed(2)}</td><td>${m.date}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+function renderStaffByWorker() {
+  const container = byId('staff-by-worker');
+  const movements = getStored(STORAGE_KEYS.STAFF);
+  if (movements.length === 0) {
+    container.textContent = 'Sin movimientos registrados.';
+    return;
+  }
+
+  const grouped = movements.reduce((acc, item) => {
+    if (!acc[item.staffName]) acc[item.staffName] = [];
+    acc[item.staffName].push(item);
+    return acc;
+  }, {});
+
+  container.innerHTML = Object.entries(grouped).map(([name, items]) => {
+    const total = items.reduce((sum, it) => sum + Number(it.cash || 0), 0);
+    const list = items.map((it) => `<li>${it.date}: ${it.product} · S/ ${Number(it.cash).toFixed(2)}</li>`).join('');
+    return `<article class="worker-card"><h4>${name}</h4><p class="muted">Movimientos: ${items.length} · Total: S/ ${total.toFixed(2)}</p><ul>${list}</ul></article>`;
+  }).join('');
+}
+
+staffForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const staffName = byId('staffName').value.trim();
+  const product = byId('staffProduct').value.trim();
+  const cash = Number(byId('staffCash').value || 0);
+  const date = byId('staffDate').value;
+
+  const errors = [];
+  if (!staffName) errors.push('Nombre del personal obligatorio.');
+  if (!product) errors.push('Producto obligatorio.');
+  if (!Number.isFinite(cash) || cash < 0) errors.push('Efectivo inválido.');
+  if (!date) errors.push('Fecha obligatoria.');
+  showError(staffError, errors);
+  if (errors.length) return;
+
+  const staff = getStored(STORAGE_KEYS.STAFF);
+  staff.push({ id: generateId(), staffName, product, cash, date });
+  setStored(STORAGE_KEYS.STAFF, staff);
+
+  staffForm.reset();
+  renderStaffTable();
+  renderStaffByWorker();
+});
+
 // -------- Búsqueda --------
 const searchInput = byId('searchInput');
 const searchResults = byId('search-results');
@@ -798,14 +881,14 @@ function renderSearchResults() {
   const pending = getStored(STORAGE_KEYS.PENDING).map((r) => ({ ...r, status: `Debe S/ ${r.balance.toFixed(2)}` }));
   const all = [...active, ...pending];
 
-  const found = all.filter((r) => r.fullName.toLowerCase().includes(q) || r.dni.toLowerCase().includes(q));
+  const found = all.filter((r) => r.fullName.toLowerCase().includes(q) || (r.phone || r.dni || '').toLowerCase().includes(q));
 
   if (found.length === 0) {
     searchResults.textContent = 'No se encontraron usuarios.';
     return;
   }
 
-  searchResults.innerHTML = found.map((r) => `<div class="alert-item"><strong>${r.fullName}</strong> · DNI: ${r.dni}<br/>Servicio: ${r.service} · Vence: ${r.endDate}<br/>Estado: ${r.status}</div>`).join('');
+  searchResults.innerHTML = found.map((r) => `<div class="alert-item"><strong>${r.fullName}</strong> · Cel: ${r.phone || r.dni || '-'}<br/>Servicio: ${r.service} · Vence: ${r.endDate}<br/>Estado: ${r.status}</div>`).join('');
 }
 
 searchInput.addEventListener('input', renderSearchResults);
@@ -817,4 +900,6 @@ renderActiveTable();
 renderPendingTable();
 renderSales();
 renderExpiryAlerts();
+renderStaffTable();
+renderStaffByWorker();
 setupCsvTools();

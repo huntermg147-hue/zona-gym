@@ -1,12 +1,13 @@
 # Zona Gym Pro
 
-Sistema web para gimnasio con **5 secciones**:
+Sistema web para gimnasio con **6 secciones**:
 
 1. Plan nutricional + rutina.
 2. Registro de gym.
 3. Ventas de productos.
 4. Pagos pendientes.
 5. Búsqueda de usuario.
+6. Control de personal del gym.
 
 ## Precios y promociones
 
@@ -25,6 +26,7 @@ Sistema web para gimnasio con **5 secciones**:
 
 ## Funcionalidades agregadas
 
+- En Registro de gym se usa **número de celular** en lugar de DNI.
 - Botón para borrar registros de gym **por persona** (no borra todo).
 - Sección de pagos pendientes para usuarios con adelanto parcial.
 - Si el adelanto es `0`, la inscripción se guarda en Registro de gym (no pasa a pendientes).
@@ -35,6 +37,7 @@ Sistema web para gimnasio con **5 secciones**:
 - Alertas de vencimiento con 3 días de anticipación.
 - Sección de búsqueda para ver datos completos del usuario, vencimiento y estado de pago.
 - Módulo de ventas con cálculo automático de precio final (`unidades x precio unitario`).
+- Control de personal del gym con registro de consumo/adelantos y vista agrupada por trabajador.
 - En plan nutricional se restauró la sección inicial y se ampliaron las comidas recomendadas con mayor detalle: porción, macros por porción, kcal aproximadas, costo estimado, región sugerida y momento de consumo.
 
 ## Ejecución
