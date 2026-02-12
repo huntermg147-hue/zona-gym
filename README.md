@@ -63,6 +63,7 @@ http://localhost:8000
 - En la sección **Registro de gym** puedes usar `Exportar datos (CSV)` para descargar un respaldo compatible con Excel.
 - También puedes usar `Importar datos (CSV)` para restaurar activos, pendientes, ventas y personal desde un backup.
 - El CSV se exporta con separador `;` para que Excel lo abra en columnas automáticamente.
+- También puedes usar `Exportar informe (Excel)` para generar un archivo presentable con encabezados en español, bordes y formato de informe.
 
 ## Persistencia de datos
 

@@ -234,6 +234,15 @@ function getCsvDelimiter() {
   return ';';
 }
 
+function toHtmlCell(value) {
+  const text = String(value ?? '');
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
 function normalizeNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -273,6 +282,147 @@ function exportToCsv() {
   URL.revokeObjectURL(url);
 
   setCsvMessage(`Exportación completada: ${rows.length} registros.`);
+}
+
+function exportToExcelReport() {
+  const active = getStored(STORAGE_KEYS.ACTIVE);
+  const pending = getStored(STORAGE_KEYS.PENDING);
+  const sales = getStored(STORAGE_KEYS.SALES);
+  const staff = getStored(STORAGE_KEYS.STAFF);
+
+  const rows = [
+    ...active.map((r) => ({
+      categoria: 'Inscripción activa',
+      nombre: r.fullName,
+      celular: r.phone || r.dni || '-',
+      detalle: r.service,
+      fecha: r.startDate,
+      total: Number(r.total || 0),
+      pagado: Number(r.paid || 0),
+      saldo: Number(r.balance || 0),
+      metodo: formatPayMethod(r.paymentMethod || 'cash')
+    })),
+    ...pending.map((r) => ({
+      categoria: 'Pago pendiente',
+      nombre: r.fullName,
+      celular: r.phone || r.dni || '-',
+      detalle: r.service,
+      fecha: r.startDate,
+      total: Number(r.total || 0),
+      pagado: Number(r.paid || 0),
+      saldo: Number(r.balance || 0),
+      metodo: formatPayMethod(r.paymentMethod || 'cash')
+    })),
+    ...sales.map((s) => ({
+      categoria: 'Venta',
+      nombre: s.product,
+      celular: '-',
+      detalle: `${Number(s.units || 0)} und x S/ ${Number(s.unitPrice || 0).toFixed(2)}`,
+      fecha: s.date || '-',
+      total: Number(s.final || 0),
+      pagado: Number(s.final || 0),
+      saldo: 0,
+      metodo: formatPayMethod(s.method || 'cash')
+    })),
+    ...staff.map((m) => ({
+      categoria: 'Personal',
+      nombre: m.staffName,
+      celular: '-',
+      detalle: m.product,
+      fecha: m.date || '-',
+      total: Number(m.cash || 0),
+      pagado: Number(m.cash || 0),
+      saldo: 0,
+      metodo: 'Efectivo'
+    }))
+  ];
+
+  const totalGeneral = rows.reduce((sum, r) => sum + Number(r.total || 0), 0);
+
+  const bodyRows = rows.map((r) => `
+    <tr>
+      <td>${toHtmlCell(r.categoria)}</td>
+      <td>${toHtmlCell(r.nombre)}</td>
+      <td>${toHtmlCell(r.celular)}</td>
+      <td>${toHtmlCell(r.detalle)}</td>
+      <td>${toHtmlCell(r.fecha)}</td>
+      <td class="num">S/ ${Number(r.total).toFixed(2)}</td>
+      <td class="num">S/ ${Number(r.pagado).toFixed(2)}</td>
+      <td class="num">S/ ${Number(r.saldo).toFixed(2)}</td>
+      <td>${toHtmlCell(r.metodo)}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <style>
+        body { font-family: Calibri, Arial, sans-serif; padding: 18px; color: #1f2937; }
+        h1 { margin: 0 0 6px; font-size: 22px; }
+        p { margin: 0 0 12px; color: #374151; }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        th, td {
+          border: 1px solid #9ca3af;
+          padding: 8px 10px;
+          font-size: 12px;
+          vertical-align: middle;
+          word-wrap: break-word;
+          white-space: normal;
+        }
+        th {
+          background: #0ea5e9;
+          color: #ffffff;
+          text-align: left;
+          font-weight: 700;
+        }
+        td.num { text-align: right; }
+        tfoot td {
+          background: #e0f2fe;
+          font-weight: 700;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Informe Zona Gym</h1>
+      <p>Fecha de generación: ${new Date().toLocaleString('es-PE')}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Nombre / Producto</th>
+            <th>Celular</th>
+            <th>Detalle</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Pagado</th>
+            <th>Saldo</th>
+            <th>Método de pago</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">TOTAL GENERAL</td>
+            <td class="num">S/ ${totalGeneral.toFixed(2)}</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </body>
+  </html>`;
+
+  const blob = new Blob([`\ufeff${html}`], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `informe-zona-gym-${new Date().toISOString().slice(0, 10)}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  setCsvMessage(`Informe Excel generado con ${rows.length} filas.`);
 }
 
 function parseCsvLine(line, delimiter = ',') {
@@ -395,12 +545,14 @@ function importFromCsvText(csvText) {
 
 function setupCsvTools() {
   const exportBtn = byId('export-csv-btn');
+  const exportReportBtn = byId('export-informe-btn');
   const importBtn = byId('import-csv-btn');
   const fileInput = byId('csv-file-input');
 
   if (!exportBtn || !importBtn || !fileInput) return;
 
   exportBtn.addEventListener('click', exportToCsv);
+  exportReportBtn?.addEventListener('click', exportToExcelReport);
   importBtn.addEventListener('click', () => fileInput.click());
 
   fileInput.addEventListener('change', () => {
