@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
 };
 
 const serviceCatalog = {
+  rutina: { label: 'Solo rutina', regular: 5, promo2plus: 5 },
   maquinas: { label: 'Solo máquinas', regular: 50, promo2plus: 50 },
   bailes: { label: 'Solo bailes', regular: 50, promo2plus: 50 },
   maquina_baile: { label: 'Máquina + baile', regular: 60, promo2plus: 50 },
@@ -663,7 +664,11 @@ function getEffectiveRegisterTotal(defaultPrice) {
 function calculateEndDate(startISO) {
   if (!startISO) return '';
   const d = new Date(`${startISO}T00:00:00`);
-  d.setMonth(d.getMonth() + 1);
+  if (byId('serviceType')?.value === 'rutina') {
+    d.setDate(d.getDate() + 1);
+  } else {
+    d.setMonth(d.getMonth() + 1);
+  }
   return d.toISOString().split('T')[0];
 }
 
@@ -1104,10 +1109,12 @@ function renderClosure() {
   const today = new Date().toISOString().slice(0, 10);
   const yearMonth = today.slice(0, 7);
 
+  const rutinaPayments = collectMembershipPayments(['rutina']);
   const maquinasPayments = collectMembershipPayments(['maquinas']);
   const baileJumpingPayments = collectMembershipPayments(['baile_jumping']);
   const salesPayments = getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
 
+  renderClosureBox(byId('closure-rutina'), 'Rutina', filterByDay(rutinaPayments, today), filterByMonth(rutinaPayments, yearMonth));
   renderClosureBox(byId('closure-maquinas'), 'Máquinas', filterByDay(maquinasPayments, today), filterByMonth(maquinasPayments, yearMonth));
   renderClosureBox(byId('closure-baile-jumping'), 'Baile y jumping', filterByDay(baileJumpingPayments, today), filterByMonth(baileJumpingPayments, yearMonth));
   renderClosureBox(byId('closure-ventas'), 'Ventas', filterByDay(salesPayments, today), filterByMonth(salesPayments, yearMonth));
@@ -1182,6 +1189,7 @@ function staffMonthlyReport() {
 
 function cashConsolidatedMonthlyReport() {
   const yearMonth = getCurrentYearMonth();
+  const rutina = filterByMonth(collectMembershipPayments(['rutina']), yearMonth);
   const maquinas = filterByMonth(collectMembershipPayments(['maquinas']), yearMonth);
   const baileJumping = filterByMonth(collectMembershipPayments(['baile_jumping']), yearMonth);
   const ventas = filterByMonth(
@@ -1190,6 +1198,7 @@ function cashConsolidatedMonthlyReport() {
   );
 
   return {
+    rutina: sumByMethod(rutina),
     maquinas: sumByMethod(maquinas),
     baileJumping: sumByMethod(baileJumping),
     ventas: sumByMethod(ventas)
@@ -1232,6 +1241,7 @@ function renderReports() {
 
   const cash = cashConsolidatedMonthlyReport();
   cashSummary.innerHTML = `
+    <div class="alert-item"><strong>Rutina:</strong> Total S/ ${cash.rutina.total.toFixed(2)} · Efectivo S/ ${cash.rutina.cash.toFixed(2)} · Yape S/ ${cash.rutina.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Máquinas:</strong> Total S/ ${cash.maquinas.total.toFixed(2)} · Efectivo S/ ${cash.maquinas.cash.toFixed(2)} · Yape S/ ${cash.maquinas.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Baile + jumping:</strong> Total S/ ${cash.baileJumping.total.toFixed(2)} · Efectivo S/ ${cash.baileJumping.cash.toFixed(2)} · Yape S/ ${cash.baileJumping.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Ventas:</strong> Total S/ ${cash.ventas.total.toFixed(2)} · Efectivo S/ ${cash.ventas.cash.toFixed(2)} · Yape S/ ${cash.ventas.yape.toFixed(2)}</div>
@@ -1259,6 +1269,9 @@ function exportReportsCsv() {
   staffMonthlyReport().forEach((s) => lines.push(['personal', `${s.name}`, `mov:${s.moves} total:S/ ${s.total.toFixed(2)}`].join(delimiter)));
 
   const cash = cashConsolidatedMonthlyReport();
+  lines.push(['caja', 'rutina total', `S/ ${cash.rutina.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'rutina efectivo', `S/ ${cash.rutina.cash.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'rutina yape', `S/ ${cash.rutina.yape.toFixed(2)}`].join(delimiter));
   lines.push(['caja', 'maquinas total', `S/ ${cash.maquinas.total.toFixed(2)}`].join(delimiter));
   lines.push(['caja', 'maquinas efectivo', `S/ ${cash.maquinas.cash.toFixed(2)}`].join(delimiter));
   lines.push(['caja', 'maquinas yape', `S/ ${cash.maquinas.yape.toFixed(2)}`].join(delimiter));

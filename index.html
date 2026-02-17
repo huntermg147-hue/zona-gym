@@ -88,6 +88,7 @@
                 Tipo de servicio
                 <select id="serviceType" required>
                   <option value="">Seleccionar servicio</option>
+                  <option value="rutina">Solo rutina</option>
                   <option value="maquinas">Solo máquinas</option>
                   <option value="bailes">Solo bailes</option>
                   <option value="maquina_baile">Máquina + baile</option>
@@ -277,6 +278,11 @@
           <div class="actions">
             <button type="button" id="refresh-closure-btn">Actualizar cierre</button>
           </div>
+        </section>
+
+        <section class="card">
+          <h3>Total de rutina</h3>
+          <div id="closure-rutina" class="closure-grid"></div>
         </section>
 
         <section class="card">
