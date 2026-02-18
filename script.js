@@ -294,7 +294,7 @@ function exportToExcelReport() {
     .filter((r) => r.serviceKey === 'maquinas')
     .map((r) => ({
       cliente: r.fullName,
-      celular: r.phone || r.dni || '-',
+      celular: r.phone || r.dni || 'Sin número',
       servicio: r.service,
       fecha: r.startDate || '-',
       total: Number(r.total || 0),
@@ -305,7 +305,7 @@ function exportToExcelReport() {
 
   const debtRows = pending.map((r) => ({
     cliente: r.fullName,
-    celular: r.phone || r.dni || '-',
+    celular: r.phone || r.dni || 'Sin número',
     servicio: r.service,
     fecha: r.startDate || '-',
     total: Number(r.total || 0),
@@ -712,7 +712,6 @@ function validateRegister() {
   const total = getEffectiveRegisterTotal(baseTotal);
 
   if (!name) errors.push('Nombre obligatorio.');
-  if (!phone) errors.push('Celular obligatorio.');
   if (!byId('startDate').value) errors.push('Fecha de inscripción obligatoria.');
   if (!serviceKey) errors.push('Selecciona servicio.');
   if (Number.isNaN(paid) || paid < 0) errors.push('Adelanto inválido.');
@@ -791,7 +790,7 @@ function renderActiveTable() {
 
   active.forEach((r) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || '-'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
+    tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || 'Sin número'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
     body.appendChild(tr);
   });
 }
@@ -813,7 +812,7 @@ function renderExpiryAlerts() {
     return;
   }
 
-  el.innerHTML = alerts.map((r) => `<div class="alert-item">⚠️ ${r.fullName} vence el ${r.endDate} (Cel: ${r.phone || r.dni || '-'})</div>`).join('');
+  el.innerHTML = alerts.map((r) => `<div class="alert-item">⚠️ ${r.fullName} vence el ${r.endDate} (Cel: ${r.phone || r.dni || 'Sin número'})</div>`).join('');
 }
 
 registerForm.addEventListener('submit', (e) => {
@@ -862,7 +861,7 @@ function renderPendingTable() {
   pending.forEach((p) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${p.fullName}</td><td>${p.phone || p.dni || '-'}</td><td>${p.service}</td>
+      <td>${p.fullName}</td><td>${p.phone || p.dni || 'Sin número'}</td><td>${p.service}</td>
       <td>S/ ${p.total.toFixed(2)}</td><td>S/ ${p.paid.toFixed(2)}</td><td>S/ ${p.balance.toFixed(2)}</td>
       <td><input type="number" min="0" step="0.01" value="0" class="pay-input" data-pay-id="${p.id}" /><select class="pay-method" data-pay-method="${p.id}"><option value="cash">Efectivo</option><option value="yape">Yape</option></select></td>
       <td>
@@ -1238,7 +1237,7 @@ function renderReports() {
   const pendingReport = pendingMonthlyReport();
   pendingTotal.textContent = `Deuda acumulada del mes: S/ ${pendingReport.debt.toFixed(2)}.`;
   pendingList.innerHTML = pendingReport.pending.length
-    ? pendingReport.pending.map((p) => `<div class="alert-item"><strong>${p.fullName}</strong> · Cel: ${p.phone || p.dni || '-'} · Saldo: S/ ${Number(p.balance || 0).toFixed(2)}</div>`).join('')
+    ? pendingReport.pending.map((p) => `<div class="alert-item"><strong>${p.fullName}</strong> · Cel: ${p.phone || p.dni || 'Sin número'} · Saldo: S/ ${Number(p.balance || 0).toFixed(2)}</div>`).join('')
     : 'Sin deudas pendientes.';
 
   const top = topProductsReport();
@@ -1332,7 +1331,7 @@ function renderSearchResults() {
     return;
   }
 
-  searchResults.innerHTML = found.map((r) => `<div class="alert-item"><strong>${r.fullName}</strong> · Cel: ${r.phone || r.dni || '-'}<br/>Servicio: ${r.service} · Vence: ${r.endDate}<br/>Estado: ${r.status}</div>`).join('');
+  searchResults.innerHTML = found.map((r) => `<div class="alert-item"><strong>${r.fullName}</strong> · Cel: ${r.phone || r.dni || 'Sin número'}<br/>Servicio: ${r.service} · Vence: ${r.endDate}<br/>Estado: ${r.status}</div>`).join('');
 }
 
 searchInput.addEventListener('input', renderSearchResults);
