@@ -777,6 +777,7 @@ function removeActive(id) {
   renderSearchResults();
   renderExpiryAlerts();
   renderReports();
+  renderClosure();
 }
 
 function renderActiveTable() {
@@ -1024,6 +1025,7 @@ function deleteStaffMovement(id) {
   renderStaffTable();
   renderStaffByWorker();
   renderReports();
+  renderClosure();
 }
 
 function renderStaffByWorker() {
@@ -1076,6 +1078,7 @@ staffForm?.addEventListener('submit', (e) => {
   renderStaffTable();
   renderStaffByWorker();
   renderReports();
+  renderClosure();
 });
 
 // -------- Cierre de caja --------
@@ -1121,6 +1124,29 @@ function filterByMonth(items, yearMonth) {
   return items.filter((i) => (i.date || '').slice(0, 7) === yearMonth);
 }
 
+function collectStaffCashMovements() {
+  return getStored(STORAGE_KEYS.STAFF).map((s) => ({ amount: Number(s.cash || 0), method: 'cash', date: s.date || '' }));
+}
+
+function renderBalanceBox(el, dayIncomeItems, monthIncomeItems, dayExpenseItems, monthExpenseItems) {
+  if (!el) return;
+  const dayIncome = sumByMethod(dayIncomeItems);
+  const monthIncome = sumByMethod(monthIncomeItems);
+  const dayExpense = sumByMethod(dayExpenseItems);
+  const monthExpense = sumByMethod(monthExpenseItems);
+  const dayNet = dayIncome.total - dayExpense.total;
+  const monthNet = monthIncome.total - monthExpense.total;
+
+  el.innerHTML = `
+    <div class="stat"><span class="label">Ingresos día</span><span class="value">S/ ${dayIncome.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Egresos día (personal)</span><span class="value">S/ ${dayExpense.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Neto día</span><span class="value">S/ ${dayNet.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Ingresos mes</span><span class="value">S/ ${monthIncome.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Egresos mes (personal)</span><span class="value">S/ ${monthExpense.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Neto mes</span><span class="value">S/ ${monthNet.toFixed(2)}</span></div>
+  `;
+}
+
 function renderClosure() {
   const today = new Date().toISOString().slice(0, 10);
   const yearMonth = today.slice(0, 7);
@@ -1131,11 +1157,20 @@ function renderClosure() {
   const maquinasPayments = collectMembershipPayments(['maquinas', 'maquina_baile', '3servicios']);
   const baileJumpingPayments = collectMembershipPayments(['bailes', 'baile_jumping', 'maquina_baile', '3servicios']);
   const salesPayments = getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
+  const staffCashMovements = collectStaffCashMovements();
+  const allIncomePayments = [...rutinaPayments, ...maquinasPayments, ...baileJumpingPayments, ...salesPayments];
 
   renderClosureBox(byId('closure-rutina'), 'Rutina', filterByDay(rutinaPayments, today), filterByMonth(rutinaPayments, yearMonth));
   renderClosureBox(byId('closure-maquinas'), 'Máquinas', filterByDay(maquinasPayments, today), filterByMonth(maquinasPayments, yearMonth));
   renderClosureBox(byId('closure-baile-jumping'), 'Baile y jumping', filterByDay(baileJumpingPayments, today), filterByMonth(baileJumpingPayments, yearMonth));
   renderClosureBox(byId('closure-ventas'), 'Ventas', filterByDay(salesPayments, today), filterByMonth(salesPayments, yearMonth));
+  renderBalanceBox(
+    byId('closure-balance'),
+    filterByDay(allIncomePayments, today),
+    filterByMonth(allIncomePayments, yearMonth),
+    filterByDay(staffCashMovements, today),
+    filterByMonth(staffCashMovements, yearMonth)
+  );
   renderReports();
 }
 
@@ -1215,11 +1250,30 @@ function cashConsolidatedMonthlyReport() {
     yearMonth
   );
 
+  const personal = filterByMonth(collectStaffCashMovements(), yearMonth);
+  const rutinaSummary = sumByMethod(rutina);
+  const maquinasSummary = sumByMethod(maquinas);
+  const baileJumpingSummary = sumByMethod(baileJumping);
+  const ventasSummary = sumByMethod(ventas);
+  const ingresosTotal = {
+    total: rutinaSummary.total + maquinasSummary.total + baileJumpingSummary.total + ventasSummary.total,
+    cash: rutinaSummary.cash + maquinasSummary.cash + baileJumpingSummary.cash + ventasSummary.cash,
+    yape: rutinaSummary.yape + maquinasSummary.yape + baileJumpingSummary.yape + ventasSummary.yape
+  };
+  const egresosPersonal = sumByMethod(personal);
+
   return {
-    rutina: sumByMethod(rutina),
-    maquinas: sumByMethod(maquinas),
-    baileJumping: sumByMethod(baileJumping),
-    ventas: sumByMethod(ventas)
+    rutina: rutinaSummary,
+    maquinas: maquinasSummary,
+    baileJumping: baileJumpingSummary,
+    ventas: ventasSummary,
+    ingresosTotal,
+    egresosPersonal,
+    neto: {
+      total: ingresosTotal.total - egresosPersonal.total,
+      cash: ingresosTotal.cash - egresosPersonal.cash,
+      yape: ingresosTotal.yape - egresosPersonal.yape
+    }
   };
 }
 
@@ -1265,6 +1319,9 @@ function renderReports() {
     <div class="alert-item"><strong>Máquinas:</strong> Total S/ ${cash.maquinas.total.toFixed(2)} · Efectivo S/ ${cash.maquinas.cash.toFixed(2)} · Yape S/ ${cash.maquinas.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Baile + jumping:</strong> Total S/ ${cash.baileJumping.total.toFixed(2)} · Efectivo S/ ${cash.baileJumping.cash.toFixed(2)} · Yape S/ ${cash.baileJumping.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Ventas:</strong> Total S/ ${cash.ventas.total.toFixed(2)} · Efectivo S/ ${cash.ventas.cash.toFixed(2)} · Yape S/ ${cash.ventas.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Ingresos totales:</strong> S/ ${cash.ingresosTotal.total.toFixed(2)} · Efectivo S/ ${cash.ingresosTotal.cash.toFixed(2)} · Yape S/ ${cash.ingresosTotal.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Egresos personal:</strong> S/ ${cash.egresosPersonal.total.toFixed(2)} · Efectivo S/ ${cash.egresosPersonal.cash.toFixed(2)}</div>
+    <div class="alert-item"><strong>Neto caja:</strong> S/ ${cash.neto.total.toFixed(2)} · Efectivo S/ ${cash.neto.cash.toFixed(2)} · Yape S/ ${cash.neto.yape.toFixed(2)}</div>
   `;
 }
 
@@ -1301,6 +1358,9 @@ function exportReportsCsv() {
   lines.push(['caja', 'ventas total', `S/ ${cash.ventas.total.toFixed(2)}`].join(delimiter));
   lines.push(['caja', 'ventas efectivo', `S/ ${cash.ventas.cash.toFixed(2)}`].join(delimiter));
   lines.push(['caja', 'ventas yape', `S/ ${cash.ventas.yape.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'ingresos totales', `S/ ${cash.ingresosTotal.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'egresos personal', `S/ ${cash.egresosPersonal.total.toFixed(2)}`].join(delimiter));
+  lines.push(['caja', 'neto caja', `S/ ${cash.neto.total.toFixed(2)}`].join(delimiter));
 
   const blob = new Blob([`\ufeff${lines.join('\n')}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
