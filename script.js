@@ -649,6 +649,21 @@ gymForm.addEventListener('submit', (e) => {
 // -------- Registro --------
 const registerForm = byId('register-form');
 const registerError = byId('register-error');
+
+function toDateMs(dateStr) {
+  if (!dateStr) return 0;
+  const ms = new Date(`${dateStr}T00:00:00`).getTime();
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+function sortMembersByStartDate(records) {
+  return [...records].sort((a, b) => {
+    const diff = toDateMs(a.startDate) - toDateMs(b.startDate);
+    if (diff !== 0) return diff;
+    return String(a.fullName || '').localeCompare(String(b.fullName || ''), 'es', { sensitivity: 'base' });
+  });
+}
+
 function getServicePrice(serviceKey, people) {
   const s = serviceCatalog[serviceKey];
   if (!s) return 0;
@@ -767,7 +782,7 @@ function removeActive(id) {
 
 function renderActiveTable() {
   const body = byId('register-table-body');
-  const active = getStored(STORAGE_KEYS.ACTIVE);
+  const active = sortMembersByStartDate(getStored(STORAGE_KEYS.ACTIVE));
   body.innerHTML = '';
   if (active.length === 0) {
     body.innerHTML = '<tr><td colspan="8">Sin registros activos.</td></tr>';
@@ -837,7 +852,7 @@ byId('register-table-body').addEventListener('click', (e) => {
 // -------- Pendientes --------
 function renderPendingTable() {
   const body = byId('pending-table-body');
-  const pending = getStored(STORAGE_KEYS.PENDING);
+  const pending = sortMembersByStartDate(getStored(STORAGE_KEYS.PENDING));
   body.innerHTML = '';
   if (pending.length === 0) {
     body.innerHTML = '<tr><td colspan="8">No hay pagos pendientes.</td></tr>';
