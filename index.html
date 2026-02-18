@@ -23,6 +23,7 @@
         <button class="tab-btn" type="button" data-target="staff-section">Personal gym</button>
         <button class="tab-btn" type="button" data-target="reports-section">Reportes</button>
         <button class="tab-btn" type="button" data-target="closure-section">Cierre de caja</button>
+        <button class="tab-btn" type="button" data-target="payments-filter-section">Filtro de pagos</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -42,6 +43,9 @@
               </label>
               <label>Peso actual (kg)<input type="number" id="weight" min="35" max="250" step="0.1" required /></label>
               <label>Estatura (cm)<input type="number" id="height" min="130" max="230" required /></label>
+              <label>Cintura (cm)<input type="number" id="waist" min="40" max="200" step="0.1" required /></label>
+              <label>Cuello (cm)<input type="number" id="neck" min="20" max="80" step="0.1" required /></label>
+              <label>Cadera (cm, mujer)<input type="number" id="hip" min="40" max="220" step="0.1" placeholder="Opcional para varón" /></label>
               <label>
                 Actividad física
                 <select id="activity" required>
@@ -70,6 +74,7 @@
           <div class="result-grid">
             <article class="card"><h3>Macros</h3><div id="macro-bars" class="stack"></div></article>
             <article class="card"><h3>Proyección</h3><div id="projection" class="projection"></div></article>
+            <article class="card"><h3>Composición corporal</h3><div id="body-comp" class="projection"></div></article>
           </div>
           <article class="card"><h3>Comidas</h3><div id="foods" class="food-grid"></div></article>
           <article class="card"><h3>Rutina sugerida</h3><div id="routine" class="routine-grid"></div></article>
@@ -136,10 +141,24 @@
             <table>
               <thead>
                 <tr>
-                  <th>Cliente</th><th>Celular</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Acción</th>
+                  <th>Cliente</th><th>Celular</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Método pago</th><th>Acción</th>
                 </tr>
               </thead>
-              <tbody id="register-table-body"></tbody>
+              <tbody id="register-monthly-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Personas registradas - Rutinas</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th><th>Celular</th><th>Servicio</th><th>Ingreso</th><th>Término</th><th>Total</th><th>Saldo</th><th>Método pago</th><th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="register-routine-table-body"></tbody>
             </table>
           </div>
         </section>
@@ -205,7 +224,7 @@
           <h2>Control de personal del gym</h2>
           <form id="staff-form" novalidate>
             <div class="grid">
-              <label>Nombre del personal<input type="text" id="staffName" required /></label>
+              <label>Nombre del personal<select id="staffName" required><option value="edson">Edson</option><option value="charo">Charo</option></select></label>
               <label>Producto que consumió<input type="text" id="staffProduct" required /></label>
               <label>Efectivo que agarró o adelanto (S/)<input type="number" id="staffCash" min="0" step="0.01" required /></label>
               <label>Fecha<input type="date" id="staffDate" required /></label>
@@ -227,7 +246,10 @@
 
         <section class="card">
           <h3>Control separado por trabajador</h3>
-          <div id="staff-by-worker" class="list-stack muted">Sin movimientos registrados.</div>
+          <div class="result-grid">
+            <article class="card"><h4>Edson</h4><div id="staff-edson" class="list-stack muted">Sin movimientos registrados.</div></article>
+            <article class="card"><h4>Charo</h4><div id="staff-charo" class="list-stack muted">Sin movimientos registrados.</div></article>
+          </div>
         </section>
       </section>
 
@@ -305,6 +327,34 @@
         <section class="card">
           <h3>Balance neto de caja</h3>
           <div id="closure-balance" class="closure-grid"></div>
+        </section>
+      </section>
+
+      <section id="payments-filter-section" class="app-section hidden">
+        <section class="card">
+          <h2>Filtro de pagos por método</h2>
+          <p class="muted">Filtra pagos de Registro de gym y Ventas por fecha, mes y medio de pago.</p>
+          <div class="grid">
+            <label>Fecha específica<input type="date" id="pay-filter-day" /></label>
+            <label>Mes<input type="month" id="pay-filter-month" /></label>
+            <label>Método<select id="pay-filter-method"><option value="all">Todos</option><option value="cash">Efectivo</option><option value="yape">Yape</option></select></label>
+          </div>
+          <div class="actions"><button type="button" id="run-pay-filter-btn">Aplicar filtro</button></div>
+        </section>
+
+        <section class="card">
+          <h3>Resumen filtrado</h3>
+          <div id="pay-filter-summary" class="closure-grid"></div>
+        </section>
+
+        <section class="card">
+          <h3>Detalle registro de gym</h3>
+          <div id="pay-filter-register-list" class="list-stack muted">Sin resultados.</div>
+        </section>
+
+        <section class="card">
+          <h3>Detalle ventas</h3>
+          <div id="pay-filter-sales-list" class="list-stack muted">Sin resultados.</div>
         </section>
       </section>
 

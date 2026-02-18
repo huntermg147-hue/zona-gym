@@ -253,6 +253,13 @@ function formatPayMethod(method) {
   return method === 'yape' ? 'Yape' : 'Efectivo';
 }
 
+function formatStaffName(name) {
+  const value = String(name || '').toLowerCase();
+  if (value === 'edson') return 'Edson';
+  if (value === 'charo') return 'Charo';
+  return name || 'Sin nombre';
+}
+
 function buildCsvRows() {
   const active = getStored(STORAGE_KEYS.ACTIVE).map((r) => ({ source: 'active', ...r }));
   const pending = getStored(STORAGE_KEYS.PENDING).map((r) => ({ source: 'pending', ...r }));
@@ -587,6 +594,7 @@ const gymForm = byId('gym-form');
 const summary = byId('summary');
 const macroBars = byId('macro-bars');
 const projection = byId('projection');
+const bodyComp = byId('body-comp');
 const foods = byId('foods');
 const routine = byId('routine');
 const results = byId('results');
@@ -609,6 +617,34 @@ function splitMacros(calories, goal) {
   };
 }
 
+function calculateBodyComposition({ sex, height, waist, neck, hip, weight }) {
+  const heightNum = Number(height);
+  const waistNum = Number(waist);
+  const neckNum = Number(neck);
+  const hipNum = Number(hip || 0);
+
+  if (!heightNum || !waistNum || !neckNum) return null;
+
+  let bodyFat = null;
+  if (sex === 'male') {
+    const v = 495 / (1.0324 - 0.19077 * Math.log10(Math.max(waistNum - neckNum, 1)) + 0.15456 * Math.log10(heightNum)) - 450;
+    bodyFat = v;
+  } else {
+    if (!hipNum) return null;
+    const v = 495 / (1.29579 - 0.35004 * Math.log10(Math.max(waistNum + hipNum - neckNum, 1)) + 0.22100 * Math.log10(heightNum)) - 450;
+    bodyFat = v;
+  }
+
+  const fatMass = (Number(weight) * bodyFat) / 100;
+  const leanMass = Number(weight) - fatMass;
+  return {
+    bodyFat: Math.max(0, bodyFat),
+    leanPercent: Math.max(0, 100 - bodyFat),
+    fatMass: Math.max(0, fatMass),
+    leanMass: Math.max(0, leanMass)
+  };
+}
+
 gymForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const data = {
@@ -617,6 +653,9 @@ gymForm.addEventListener('submit', (e) => {
     sex: byId('sex').value,
     weight: Number(byId('weight').value),
     height: Number(byId('height').value),
+    waist: Number(byId('waist').value),
+    neck: Number(byId('neck').value),
+    hip: Number(byId('hip').value || 0),
     activity: Number(byId('activity').value),
     goal: byId('goal').value
   };
@@ -641,6 +680,15 @@ gymForm.addEventListener('submit', (e) => {
   projection.innerHTML = `<div class="projection-box"><strong>Proyección semanal:</strong> ${projectionData.weekly > 0 ? '+' : ''}${projectionData.weekly.toFixed(2)} kg/semana</div>
   <div class="projection-box"><strong>Proyección mensual:</strong> ${projectionData.monthly > 0 ? '+' : ''}${projectionData.monthly.toFixed(2)} kg/mes</div>
   <div class="projection-box">Plan orientativo para público peruano. Ajustar con nutricionista si hay condición médica.</div>`;
+
+  const comp = calculateBodyComposition(data);
+  if (bodyComp) {
+    bodyComp.innerHTML = comp
+      ? `<div class="projection-box"><strong>% grasa corporal:</strong> ${comp.bodyFat.toFixed(2)}%</div>
+         <div class="projection-box"><strong>% masa magra:</strong> ${comp.leanPercent.toFixed(2)}%</div>
+         <div class="projection-box"><strong>Masa grasa:</strong> ${comp.fatMass.toFixed(2)} kg · <strong>Masa magra:</strong> ${comp.leanMass.toFixed(2)} kg</div>`
+      : '<div class="projection-box">Completa cintura, cuello y (si es mujer) cadera para calcular composición corporal.</div>';
+  }
   foods.innerHTML = foodByGoal[data.goal].map((f) => `<article class="food-item"><h4>${f.name}</h4><p class="muted">${f.portion}</p><ul><li>Proteína: ${f.protein}g</li><li>Carbohidratos: ${f.carbs}g</li><li>Grasas: ${f.fats}g</li><li>Energía aprox: ${f.kcal} kcal</li></ul><p class="muted">Momento sugerido: ${f.when}</p><p class="food-note">${f.note}</p><div class="food-meta"><span class="pill">Costo: ${f.cost}</span><span class="pill">Zona: ${f.region}</span></div></article>`).join('');
   routine.innerHTML = routineByGoal[data.goal].map((r) => `<article class="day-card"><h4>${r.day}: ${r.focus}</h4><ul>${r.exercises.map((exercise) => `<li>${exercise}</li>`).join('')}</ul></article>`).join('');
   results.classList.remove('hidden');
@@ -781,19 +829,29 @@ function removeActive(id) {
 }
 
 function renderActiveTable() {
-  const body = byId('register-table-body');
+  const monthlyBody = byId('register-monthly-table-body');
+  const routineBody = byId('register-routine-table-body');
   const active = sortMembersByStartDate(getStored(STORAGE_KEYS.ACTIVE));
-  body.innerHTML = '';
-  if (active.length === 0) {
-    body.innerHTML = '<tr><td colspan="8">Sin registros activos.</td></tr>';
-    return;
-  }
 
-  active.forEach((r) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || 'Sin número'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
-    body.appendChild(tr);
-  });
+  const monthlyRecords = active.filter((r) => r.serviceKey !== 'rutina');
+  const routineRecords = active.filter((r) => r.serviceKey === 'rutina');
+
+  const renderRows = (body, rows, emptyText) => {
+    if (!body) return;
+    body.innerHTML = '';
+    if (!rows.length) {
+      body.innerHTML = `<tr><td colspan="9">${emptyText}</td></tr>`;
+      return;
+    }
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || 'Sin número'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td>${formatPayMethod(r.paymentMethod || 'cash')}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
+      body.appendChild(tr);
+    });
+  };
+
+  renderRows(monthlyBody, monthlyRecords, 'Sin registros de mensualidades.');
+  renderRows(routineBody, routineRecords, 'Sin registros de rutinas.');
 }
 
 function renderExpiryAlerts() {
@@ -843,7 +901,7 @@ registerForm.addEventListener('submit', (e) => {
 ['serviceType', 'peopleCount', 'startDate', 'advancePaid', 'customPrice'].forEach((id) => byId(id).addEventListener('input', refreshRegisterCalc));
 ['serviceType', 'peopleCount', 'startDate'].forEach((id) => byId(id).addEventListener('change', refreshRegisterCalc));
 
-byId('register-table-body').addEventListener('click', (e) => {
+document.querySelector('#register-section')?.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-delete-active]');
   if (!btn) return;
   removeActive(btn.dataset.deleteActive);
@@ -910,6 +968,7 @@ function deletePending(id) {
   renderPendingTable();
   renderSearchResults();
   renderReports();
+  renderPaymentsFilter();
 }
 
 byId('pending-table-body').addEventListener('click', (e) => {
@@ -1014,7 +1073,7 @@ function renderStaffTable() {
 
   movements.forEach((m) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${m.staffName}</td><td>${m.product}</td><td>S/ ${Number(m.cash).toFixed(2)}</td><td>${m.date}</td><td><button type="button" class="mini-btn danger" data-delete-staff="${m.id}">Borrar</button></td>`;
+    tr.innerHTML = `<td>${formatStaffName(m.staffName)}</td><td>${m.product}</td><td>S/ ${Number(m.cash).toFixed(2)}</td><td>${m.date}</td><td><button type="button" class="mini-btn danger" data-delete-staff="${m.id}">Borrar</button></td>`;
     body.appendChild(tr);
   });
 }
@@ -1029,24 +1088,23 @@ function deleteStaffMovement(id) {
 }
 
 function renderStaffByWorker() {
-  const container = byId('staff-by-worker');
+  const edsonEl = byId('staff-edson');
+  const charoEl = byId('staff-charo');
   const movements = getStored(STORAGE_KEYS.STAFF);
-  if (movements.length === 0) {
-    container.textContent = 'Sin movimientos registrados.';
-    return;
-  }
 
-  const grouped = movements.reduce((acc, item) => {
-    if (!acc[item.staffName]) acc[item.staffName] = [];
-    acc[item.staffName].push(item);
-    return acc;
-  }, {});
+  const byName = (name) => movements.filter((m) => (m.staffName || '').toLowerCase() === name);
+  const renderPerson = (el, rows, label) => {
+    if (!el) return;
+    if (!rows.length) {
+      el.textContent = `Sin movimientos de ${label}.`;
+      return;
+    }
+    const total = rows.reduce((sum, r) => sum + Number(r.cash || 0), 0);
+    el.innerHTML = `<div class="alert-item"><strong>Total ${label}:</strong> S/ ${total.toFixed(2)} · Movimientos: ${rows.length}</div>${rows.map((r) => `<div class="alert-item">${r.date} · ${r.product} · S/ ${Number(r.cash).toFixed(2)}</div>`).join('')}`;
+  };
 
-  container.innerHTML = Object.entries(grouped).map(([name, items]) => {
-    const total = items.reduce((sum, it) => sum + Number(it.cash || 0), 0);
-    const list = items.map((it) => `<li>${it.date}: ${it.product} · S/ ${Number(it.cash).toFixed(2)}</li>`).join('');
-    return `<article class="worker-card"><h4>${name}</h4><p class="muted">Movimientos: ${items.length} · Total: S/ ${total.toFixed(2)}</p><ul>${list}</ul></article>`;
-  }).join('');
+  renderPerson(edsonEl, byName('edson'), 'Edson');
+  renderPerson(charoEl, byName('charo'), 'Charo');
 }
 
 byId('staff-table-body')?.addEventListener('click', (e) => {
@@ -1057,13 +1115,13 @@ byId('staff-table-body')?.addEventListener('click', (e) => {
 
 staffForm?.addEventListener('submit', (e) => {
   e.preventDefault();
-  const staffName = byId('staffName').value.trim();
+  const staffName = byId('staffName').value.trim().toLowerCase();
   const product = byId('staffProduct').value.trim();
   const cash = Number(byId('staffCash').value || 0);
   const date = byId('staffDate').value;
 
   const errors = [];
-  if (!staffName) errors.push('Nombre del personal obligatorio.');
+  if (!['edson', 'charo'].includes(staffName)) errors.push('Personal debe ser Edson o Charo.');
   if (!product) errors.push('Producto obligatorio.');
   if (!Number.isFinite(cash) || cash < 0) errors.push('Efectivo inválido.');
   if (!date) errors.push('Fecha obligatoria.');
@@ -1172,6 +1230,7 @@ function renderClosure() {
     filterByMonth(staffCashMovements, yearMonth)
   );
   renderReports();
+  renderPaymentsFilter();
 }
 
 byId('refresh-closure-btn')?.addEventListener('click', renderClosure);
@@ -1183,18 +1242,23 @@ function getCurrentYearMonth() {
 
 function serviceMonthlyReport() {
   const yearMonth = getCurrentYearMonth();
-  const records = [...getStored(STORAGE_KEYS.ACTIVE), ...getStored(STORAGE_KEYS.PENDING)]
-    .filter((r) => (r.startDate || '').slice(0, 7) === yearMonth);
+  const records = [...getStored(STORAGE_KEYS.ACTIVE), ...getStored(STORAGE_KEYS.PENDING)];
 
   const grouped = records.reduce((acc, r) => {
     const key = r.serviceKey || 'otro';
     if (!acc[key]) acc[key] = { label: r.service || key, count: 0, total: 0 };
-    acc[key].count += 1;
-    acc[key].total += Number(r.total || 0);
+    const history = Array.isArray(r.paymentHistory) && r.paymentHistory.length
+      ? r.paymentHistory
+      : (Number(r.paid) > 0 ? [{ amount: Number(r.paid), method: r.paymentMethod || 'cash', date: r.startDate }] : []);
+    const monthPays = history.filter((h) => (h.date || '').slice(0, 7) === yearMonth);
+    if (monthPays.length) {
+      acc[key].count += 1;
+      acc[key].total += monthPays.reduce((sum, h) => sum + Number(h.amount || 0), 0);
+    }
     return acc;
   }, {});
 
-  return Object.values(grouped).sort((a, b) => b.total - a.total);
+  return Object.values(grouped).filter((g) => g.total > 0).sort((a, b) => b.total - a.total);
 }
 
 function pendingMonthlyReport() {
@@ -1231,7 +1295,7 @@ function staffMonthlyReport() {
 
   const grouped = staff.reduce((acc, s) => {
     const key = s.staffName || 'Sin nombre';
-    if (!acc[key]) acc[key] = { name: key, moves: 0, total: 0 };
+    if (!acc[key]) acc[key] = { name: formatStaffName(key), moves: 0, total: 0 };
     acc[key].moves += 1;
     acc[key].total += Number(s.cash || 0);
     return acc;
@@ -1375,6 +1439,69 @@ function exportReportsCsv() {
 
 byId('export-reports-btn')?.addEventListener('click', exportReportsCsv);
 
+
+function getRegisterPaymentItems() {
+  const records = [...getStored(STORAGE_KEYS.ACTIVE), ...getStored(STORAGE_KEYS.PENDING)];
+  const list = [];
+  records.forEach((r) => {
+    const history = Array.isArray(r.paymentHistory) && r.paymentHistory.length
+      ? r.paymentHistory
+      : (Number(r.paid) > 0 ? [{ amount: Number(r.paid), method: r.paymentMethod || 'cash', date: r.startDate }] : []);
+    history.forEach((h) => {
+      list.push({ source: 'Registro gym', name: r.fullName, detail: r.service, amount: Number(h.amount || 0), method: h.method || 'cash', date: h.date || r.startDate || '' });
+    });
+  });
+  return list;
+}
+
+function getSalesPaymentItems() {
+  return getStored(STORAGE_KEYS.SALES).map((s) => ({ source: 'Ventas', name: s.product, detail: `${s.units} und`, amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
+}
+
+function renderPaymentsFilter() {
+  const day = byId('pay-filter-day')?.value || '';
+  const month = byId('pay-filter-month')?.value || '';
+  const method = byId('pay-filter-method')?.value || 'all';
+
+  const applyFilter = (items) => items.filter((i) => {
+    if (method !== 'all' && i.method !== method) return false;
+    if (day && i.date !== day) return false;
+    if (month && (i.date || '').slice(0, 7) !== month) return false;
+    return true;
+  });
+
+  const regItems = applyFilter(getRegisterPaymentItems());
+  const saleItems = applyFilter(getSalesPaymentItems());
+  const all = [...regItems, ...saleItems];
+
+  const cash = all.filter((i) => i.method === 'cash').reduce((s, i) => s + i.amount, 0);
+  const yape = all.filter((i) => i.method === 'yape').reduce((s, i) => s + i.amount, 0);
+  const total = cash + yape;
+
+  const summary = byId('pay-filter-summary');
+  if (summary) {
+    summary.innerHTML = `
+      <div class="stat"><span class="label">Movimientos</span><span class="value">${all.length}</span></div>
+      <div class="stat"><span class="label">Total</span><span class="value">S/ ${total.toFixed(2)}</span></div>
+      <div class="stat"><span class="label">Efectivo</span><span class="value">S/ ${cash.toFixed(2)}</span></div>
+      <div class="stat"><span class="label">Yape</span><span class="value">S/ ${yape.toFixed(2)}</span></div>
+    `;
+  }
+
+  const regList = byId('pay-filter-register-list');
+  if (regList) regList.innerHTML = regItems.length
+    ? regItems.map((i) => `<div class="alert-item">${i.date} · <strong>${i.name}</strong> · ${i.detail} · ${formatPayMethod(i.method)} · S/ ${i.amount.toFixed(2)}</div>`).join('')
+    : 'Sin resultados en registro de gym.';
+
+  const saleList = byId('pay-filter-sales-list');
+  if (saleList) saleList.innerHTML = saleItems.length
+    ? saleItems.map((i) => `<div class="alert-item">${i.date} · <strong>${i.name}</strong> · ${i.detail} · ${formatPayMethod(i.method)} · S/ ${i.amount.toFixed(2)}</div>`).join('')
+    : 'Sin resultados en ventas.';
+}
+
+byId('run-pay-filter-btn')?.addEventListener('click', renderPaymentsFilter);
+['pay-filter-day', 'pay-filter-month', 'pay-filter-method'].forEach((id) => byId(id)?.addEventListener('change', renderPaymentsFilter));
+
 // -------- Búsqueda --------
 const searchInput = byId('searchInput');
 const searchResults = byId('search-results');
@@ -1412,6 +1539,8 @@ renderExpiryAlerts();
 renderStaffTable();
 renderStaffByWorker();
 if (byId('saleDate')) byId('saleDate').value = new Date().toISOString().slice(0, 10);
+if (byId('pay-filter-day')) byId('pay-filter-day').value = new Date().toISOString().slice(0, 10);
+if (byId('pay-filter-month')) byId('pay-filter-month').value = new Date().toISOString().slice(0, 7);
 renderClosure();
 renderReports();
 setupCsvTools();
