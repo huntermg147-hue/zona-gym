@@ -645,6 +645,53 @@ function calculateBodyComposition({ sex, height, waist, neck, hip, weight }) {
   };
 }
 
+function calculateBodyMassIndex(weightKg, heightCm) {
+  const meters = Number(heightCm) / 100;
+  if (!Number(weightKg) || !meters) return 0;
+  return Number(weightKg) / (meters * meters);
+}
+
+function classifyBmi(bmi) {
+  if (bmi < 18.5) return 'Bajo peso';
+  if (bmi < 25) return 'Peso saludable';
+  if (bmi < 30) return 'Sobrepeso';
+  if (bmi < 35) return 'Obesidad grado I';
+  if (bmi < 40) return 'Obesidad grado II';
+  return 'Obesidad grado III';
+}
+
+function classifyBodyFat(sex, bodyFatPercent) {
+  if (!Number.isFinite(bodyFatPercent)) return 'Sin clasificación';
+  if (sex === 'male') {
+    if (bodyFatPercent < 6) return 'Muy bajo';
+    if (bodyFatPercent < 14) return 'Atlético';
+    if (bodyFatPercent < 18) return 'Fitness';
+    if (bodyFatPercent < 25) return 'Aceptable';
+    return 'Elevado';
+  }
+  if (bodyFatPercent < 14) return 'Muy bajo';
+  if (bodyFatPercent < 21) return 'Atlético';
+  if (bodyFatPercent < 25) return 'Fitness';
+  if (bodyFatPercent < 32) return 'Aceptable';
+  return 'Elevado';
+}
+
+function getClinicalRecommendation(goal, bmiStatus) {
+  const byGoal = {
+    lose: 'Mantener déficit calórico moderado, alto consumo de proteína y monitorear adherencia semanal.',
+    maintain: 'Enfocar en recomposición corporal, calidad de alimentos y estabilidad de peso.',
+    gain: 'Aplicar superávit controlado, priorizar progresión de fuerza y control de % grasa.'
+  };
+  const byStatus = {
+    'Bajo peso': 'Evaluar aumento progresivo de calorías y chequeo clínico para descartar déficit nutricional.',
+    'Sobrepeso': 'Priorizar control de porciones, frecuencia de actividad y seguimiento quincenal de medidas.',
+    'Obesidad grado I': 'Se recomienda acompañamiento profesional continuo y control metabólico.',
+    'Obesidad grado II': 'Requiere plan interdisciplinario (nutrición + medicina + entrenamiento adaptado).',
+    'Obesidad grado III': 'Requiere evaluación médica integral antes de aumentar carga de entrenamiento.'
+  };
+  return `${byGoal[goal] || ''} ${byStatus[bmiStatus] || 'Continuar controles periódicos y ajuste del plan según evolución.'}`.trim();
+}
+
 gymForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const data = {
@@ -664,9 +711,14 @@ gymForm.addEventListener('submit', (e) => {
   const c = calculateCalories(data);
   const m = splitMacros(c.target, data.goal);
 
+  const bmi = calculateBodyMassIndex(data.weight, data.height);
+  const bmiStatus = classifyBmi(bmi);
+
   summary.innerHTML = `<h2>Plan para ${data.name}</h2><p class="muted">Objetivo: <strong>${goalText[data.goal]}</strong></p>
   <div class="stat-grid"><div class="stat"><span class="label">Mantenimiento</span><span class="value">${c.maintenance} kcal</span></div>
-  <div class="stat"><span class="label">Objetivo</span><span class="value">${c.target} kcal</span></div></div>`;
+  <div class="stat"><span class="label">Objetivo</span><span class="value">${c.target} kcal</span></div>
+  <div class="stat"><span class="label">IMC</span><span class="value">${bmi.toFixed(2)}</span></div>
+  <div class="stat"><span class="label">Estado IMC</span><span class="value">${bmiStatus}</span></div></div>`;
 
   macroBars.innerHTML = '';
   ['protein', 'carbs', 'fats'].forEach((k) => {
@@ -684,10 +736,14 @@ gymForm.addEventListener('submit', (e) => {
   const comp = calculateBodyComposition(data);
   if (bodyComp) {
     bodyComp.innerHTML = comp
-      ? `<div class="projection-box"><strong>% grasa corporal:</strong> ${comp.bodyFat.toFixed(2)}%</div>
+      ? `<div class="projection-box"><strong>% grasa corporal:</strong> ${comp.bodyFat.toFixed(2)}% (${classifyBodyFat(data.sex, comp.bodyFat)})</div>
          <div class="projection-box"><strong>% masa magra:</strong> ${comp.leanPercent.toFixed(2)}%</div>
-         <div class="projection-box"><strong>Masa grasa:</strong> ${comp.fatMass.toFixed(2)} kg · <strong>Masa magra:</strong> ${comp.leanMass.toFixed(2)} kg</div>`
-      : '<div class="projection-box">Completa cintura, cuello y (si es mujer) cadera para calcular composición corporal.</div>';
+         <div class="projection-box"><strong>Masa grasa absoluta:</strong> ${comp.fatMass.toFixed(2)} kg</div>
+         <div class="projection-box"><strong>Masa libre de grasa:</strong> ${comp.leanMass.toFixed(2)} kg</div>
+         <div class="projection-box"><strong>Evaluación clínica:</strong> ${getClinicalRecommendation(data.goal, bmiStatus)}</div>`
+      : `<div class="projection-box"><strong>IMC:</strong> ${bmi.toFixed(2)} (${bmiStatus})</div>
+         <div class="projection-box">Completa cintura, cuello y (si es mujer) cadera para calcular % de grasa y masa magra.</div>
+         <div class="projection-box"><strong>Evaluación clínica:</strong> ${getClinicalRecommendation(data.goal, bmiStatus)}</div>`;
   }
   foods.innerHTML = foodByGoal[data.goal].map((f) => `<article class="food-item"><h4>${f.name}</h4><p class="muted">${f.portion}</p><ul><li>Proteína: ${f.protein}g</li><li>Carbohidratos: ${f.carbs}g</li><li>Grasas: ${f.fats}g</li><li>Energía aprox: ${f.kcal} kcal</li></ul><p class="muted">Momento sugerido: ${f.when}</p><p class="food-note">${f.note}</p><div class="food-meta"><span class="pill">Costo: ${f.cost}</span><span class="pill">Zona: ${f.region}</span></div></article>`).join('');
   routine.innerHTML = routineByGoal[data.goal].map((r) => `<article class="day-card"><h4>${r.day}: ${r.focus}</h4><ul>${r.exercises.map((exercise) => `<li>${exercise}</li>`).join('')}</ul></article>`).join('');
@@ -1341,7 +1397,51 @@ function cashConsolidatedMonthlyReport() {
   };
 }
 
+function renderOperationalSummaries() {
+  const active = getStored(STORAGE_KEYS.ACTIVE);
+  const pending = getStored(STORAGE_KEYS.PENDING);
+  const sales = getStored(STORAGE_KEYS.SALES);
+  const staff = getStored(STORAGE_KEYS.STAFF);
+
+  const activeTotal = active.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const pendingDebt = pending.reduce((sum, r) => sum + Number(r.balance || 0), 0);
+  const salesTotal = sales.reduce((sum, s) => sum + Number(s.final || 0), 0);
+  const staffTotal = staff.reduce((sum, s) => sum + Number(s.cash || 0), 0);
+
+  const registerOperational = byId('register-operational-summary');
+  if (registerOperational) registerOperational.textContent = `Activos: ${active.length} · Pendientes: ${pending.length} · Cobrado en registros: S/ ${activeTotal.toFixed(2)}.`;
+
+  const monthlySummary = byId('register-monthly-summary');
+  if (monthlySummary) {
+    const monthlyCount = active.filter((r) => r.serviceKey !== 'rutina').length;
+    monthlySummary.textContent = `Total mensualidades activas: ${monthlyCount}.`;
+  }
+
+  const routineSummary = byId('register-routine-summary');
+  if (routineSummary) {
+    const routineCount = active.filter((r) => r.serviceKey === 'rutina').length;
+    routineSummary.textContent = `Total rutinas activas: ${routineCount}.`;
+  }
+
+  const salesSummary = byId('sales-summary');
+  if (salesSummary) salesSummary.textContent = `Ventas registradas: ${sales.length} · Ingreso acumulado: S/ ${salesTotal.toFixed(2)}.`;
+
+  const pendingSummary = byId('pending-operational-summary');
+  if (pendingSummary) pendingSummary.textContent = `Personas con saldo pendiente: ${pending.length} · Deuda total: S/ ${pendingDebt.toFixed(2)}.`;
+
+  const executive = byId('report-executive');
+  if (executive) {
+    executive.innerHTML = `
+      <div class="stat"><span class="label">Clientes activos</span><span class="value">${active.length}</span></div>
+      <div class="stat"><span class="label">Pendientes</span><span class="value">${pending.length}</span></div>
+      <div class="stat"><span class="label">Ventas</span><span class="value">S/ ${salesTotal.toFixed(2)}</span></div>
+      <div class="stat"><span class="label">Egresos personal</span><span class="value">S/ ${staffTotal.toFixed(2)}</span></div>
+    `;
+  }
+}
+
 function renderReports() {
+  renderOperationalSummaries();
   const reportCaption = byId('report-caption');
   if (reportCaption) reportCaption.textContent = `Reportes del mes actual: ${getCurrentYearMonth()}.`;
   const serviceBody = byId('report-service-body');

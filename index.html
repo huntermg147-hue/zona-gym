@@ -130,6 +130,8 @@
 
         <section class="card">
           <h3>Personas registradas (pagado completo)</h3>
+          <p id="register-operational-summary" class="muted">Resumen operativo de registro.</p>
+          <p id="register-monthly-summary" class="muted"></p>
           <div class="actions data-tools">
             <button type="button" id="export-csv-btn">Exportar datos (CSV)</button>
             <button type="button" id="export-informe-btn">Exportar informe (Excel)</button>
@@ -151,6 +153,7 @@
 
         <section class="card">
           <h3>Personas registradas - Rutinas</h3>
+          <p id="register-routine-summary" class="muted"></p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -183,6 +186,7 @@
 
         <section class="card">
           <h3>Historial de ventas</h3>
+          <p id="sales-summary" class="muted"></p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Producto</th><th>Unidades</th><th>Unitario</th><th>Total</th><th>Método</th><th>Fecha</th><th>Acción</th></tr></thead>
@@ -195,6 +199,7 @@
       <section id="pending-section" class="app-section hidden">
         <section class="card">
           <h2>Pagos pendientes</h2>
+          <p id="pending-operational-summary" class="muted"></p>
           <p class="muted">Aquí aparecen personas con adelanto parcial. Si completan el pago pasan automáticamente a Registro de gym.</p>
           <div class="table-wrap">
             <table>
@@ -257,6 +262,7 @@
       <section id="reports-section" class="app-section hidden">
         <section class="card">
           <h2>Reportes</h2>
+          <div id="report-executive" class="closure-grid"></div>
           <p id="report-caption" class="muted"></p>
           <p class="muted">Resumen mensual por servicios, pendientes, ventas, personal y caja consolidada.</p>
           <div class="actions"><button type="button" id="export-reports-btn">Exportar reporte (CSV)</button></div>
