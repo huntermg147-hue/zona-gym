@@ -1092,7 +1092,9 @@ function renderClosureBox(el, title, dayItems, monthItems) {
   const day = sumByMethod(dayItems);
   const month = sumByMethod(monthItems);
   el.innerHTML = `
+    <div class="stat"><span class="label">Mov. del día</span><span class="value">${dayItems.length}</span></div>
     <div class="stat"><span class="label">Por día</span><span class="value">S/ ${day.total.toFixed(2)}</span></div>
+    <div class="stat"><span class="label">Mov. del mes</span><span class="value">${monthItems.length}</span></div>
     <div class="stat"><span class="label">Por mes</span><span class="value">S/ ${month.total.toFixed(2)}</span></div>
     <div class="stat"><span class="label">Efectivo</span><span class="value">S/ ${month.cash.toFixed(2)}</span></div>
     <div class="stat"><span class="label">Yape</span><span class="value">S/ ${month.yape.toFixed(2)}</span></div>
@@ -1122,10 +1124,12 @@ function filterByMonth(items, yearMonth) {
 function renderClosure() {
   const today = new Date().toISOString().slice(0, 10);
   const yearMonth = today.slice(0, 7);
+  const closureCaption = byId('closure-caption');
+  if (closureCaption) closureCaption.textContent = `Mostrando cierre del día ${today} y acumulado del mes ${yearMonth}.`;
 
   const rutinaPayments = collectMembershipPayments(['rutina']);
-  const maquinasPayments = collectMembershipPayments(['maquinas']);
-  const baileJumpingPayments = collectMembershipPayments(['baile_jumping']);
+  const maquinasPayments = collectMembershipPayments(['maquinas', 'maquina_baile', '3servicios']);
+  const baileJumpingPayments = collectMembershipPayments(['bailes', 'baile_jumping', 'maquina_baile', '3servicios']);
   const salesPayments = getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
 
   renderClosureBox(byId('closure-rutina'), 'Rutina', filterByDay(rutinaPayments, today), filterByMonth(rutinaPayments, yearMonth));
@@ -1204,8 +1208,8 @@ function staffMonthlyReport() {
 function cashConsolidatedMonthlyReport() {
   const yearMonth = getCurrentYearMonth();
   const rutina = filterByMonth(collectMembershipPayments(['rutina']), yearMonth);
-  const maquinas = filterByMonth(collectMembershipPayments(['maquinas']), yearMonth);
-  const baileJumping = filterByMonth(collectMembershipPayments(['baile_jumping']), yearMonth);
+  const maquinas = filterByMonth(collectMembershipPayments(['maquinas', 'maquina_baile', '3servicios']), yearMonth);
+  const baileJumping = filterByMonth(collectMembershipPayments(['bailes', 'baile_jumping', 'maquina_baile', '3servicios']), yearMonth);
   const ventas = filterByMonth(
     getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' })),
     yearMonth
@@ -1220,6 +1224,8 @@ function cashConsolidatedMonthlyReport() {
 }
 
 function renderReports() {
+  const reportCaption = byId('report-caption');
+  if (reportCaption) reportCaption.textContent = `Reportes del mes actual: ${getCurrentYearMonth()}.`;
   const serviceBody = byId('report-service-body');
   const pendingTotal = byId('report-pending-total');
   const pendingList = byId('report-pending-list');
