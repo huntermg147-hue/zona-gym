@@ -595,6 +595,7 @@ const summary = byId('summary');
 const macroBars = byId('macro-bars');
 const projection = byId('projection');
 const bodyComp = byId('body-comp');
+const clinicalAlerts = byId('clinical-alerts');
 const foods = byId('foods');
 const routine = byId('routine');
 const results = byId('results');
@@ -692,6 +693,64 @@ function getClinicalRecommendation(goal, bmiStatus) {
   return `${byGoal[goal] || ''} ${byStatus[bmiStatus] || 'Continuar controles periódicos y ajuste del plan según evolución.'}`.trim();
 }
 
+
+
+function getConditionGuidance(condition, severity) {
+  const level = severity === 'high' ? 'baja' : severity === 'medium' ? 'moderada' : 'moderada-alta';
+  const map = {
+    none: {
+      warning: 'Sin contraindicaciones relevantes reportadas.',
+      avoid: 'Evitar incrementos bruscos de carga sin progresión.',
+      plan: `Intensidad sugerida: ${level}. Priorizar técnica y movilidad.`
+    },
+    knee_pain: {
+      warning: 'Dolor de rodilla: controlar impacto y ángulo de flexión.',
+      avoid: 'Evitar saltos y sentadillas profundas con dolor.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Fortalecer glúteos y cuádriceps sin impacto.`
+    },
+    lumbar_pain: {
+      warning: 'Dolor lumbar: reforzar core y postura.',
+      avoid: 'Evitar peso muerto pesado y flexión lumbar sostenida.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Trabajo anti-rotación y estabilidad.`
+    },
+    cervical_pain: {
+      warning: 'Dolor cervical: vigilar tensión en cuello/hombros.',
+      avoid: 'Evitar press por encima de cabeza con dolor activo.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Movilidad torácica y escapular.`
+    },
+    ankle_injury: {
+      warning: 'Lesión de tobillo: priorizar estabilidad articular.',
+      avoid: 'Evitar cambios de dirección bruscos y pliometría intensa.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Fortalecimiento progresivo y propiocepción.`
+    },
+    hypertension: {
+      warning: 'Hipertensión: controlar presión y respiración.',
+      avoid: 'Evitar maniobra de Valsalva y esfuerzos máximos.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja-moderada' : 'moderada'}. Cardio continuo y fuerza controlada.`
+    },
+    diabetes: {
+      warning: 'Diabetes tipo 2: monitorizar glucosa y horarios de comida.',
+      avoid: 'Evitar entrenar en ayuno prolongado sin supervisión.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja-moderada' : 'moderada'}. Mezclar cardio + fuerza.`
+    },
+    asthma: {
+      warning: 'Asma: progresión de calentamiento y control respiratorio.',
+      avoid: 'Evitar cambios bruscos de intensidad sin adaptación.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Intervalos suaves y pausas activas.`
+    },
+    obesity: {
+      warning: 'Obesidad: proteger articulaciones y mejorar tolerancia al esfuerzo.',
+      avoid: 'Evitar impacto repetitivo alto al inicio.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'moderada'}. Cardio de bajo impacto + fuerza básica.`
+    },
+    heart_condition: {
+      warning: 'Antecedente cardíaco: requiere control médico periódico.',
+      avoid: 'Evitar alta intensidad sin autorización clínica.',
+      plan: `Intensidad sugerida: ${severity === 'high' ? 'baja' : 'baja-moderada'}. Sesiones supervisadas.`
+    }
+  };
+  return map[condition] || map.none;
+}
 gymForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const data = {
@@ -703,6 +762,8 @@ gymForm.addEventListener('submit', (e) => {
     waist: Number(byId('waist').value),
     neck: Number(byId('neck').value),
     hip: Number(byId('hip').value || 0),
+    healthCondition: byId('healthCondition').value,
+    conditionSeverity: byId('conditionSeverity').value,
     activity: Number(byId('activity').value),
     goal: byId('goal').value
   };
@@ -744,6 +805,18 @@ gymForm.addEventListener('submit', (e) => {
       : `<div class="projection-box"><strong>IMC:</strong> ${bmi.toFixed(2)} (${bmiStatus})</div>
          <div class="projection-box">Completa cintura, cuello y (si es mujer) cadera para calcular % de grasa y masa magra.</div>
          <div class="projection-box"><strong>Evaluación clínica:</strong> ${getClinicalRecommendation(data.goal, bmiStatus)}</div>`;
+  }
+
+
+  const conditionGuide = getConditionGuidance(data.healthCondition, data.conditionSeverity);
+  if (clinicalAlerts) {
+    clinicalAlerts.innerHTML = `
+      <div class="projection-box"><strong>Condición reportada:</strong> ${byId('healthCondition').selectedOptions?.[0]?.textContent || 'Sin dato'}</div>
+      <div class="projection-box"><strong>Nivel de molestia:</strong> ${byId('conditionSeverity').selectedOptions?.[0]?.textContent || '-'}</div>
+      <div class="projection-box"><strong>Precaución:</strong> ${conditionGuide.warning}</div>
+      <div class="projection-box"><strong>Evitar:</strong> ${conditionGuide.avoid}</div>
+      <div class="projection-box"><strong>Indicaciones de intensidad:</strong> ${conditionGuide.plan}</div>
+    `;
   }
   foods.innerHTML = foodByGoal[data.goal].map((f) => `<article class="food-item"><h4>${f.name}</h4><p class="muted">${f.portion}</p><ul><li>Proteína: ${f.protein}g</li><li>Carbohidratos: ${f.carbs}g</li><li>Grasas: ${f.fats}g</li><li>Energía aprox: ${f.kcal} kcal</li></ul><p class="muted">Momento sugerido: ${f.when}</p><p class="food-note">${f.note}</p><div class="food-meta"><span class="pill">Costo: ${f.cost}</span><span class="pill">Zona: ${f.region}</span></div></article>`).join('');
   routine.innerHTML = routineByGoal[data.goal].map((r) => `<article class="day-card"><h4>${r.day}: ${r.focus}</h4><ul>${r.exercises.map((exercise) => `<li>${exercise}</li>`).join('')}</ul></article>`).join('');
@@ -1262,8 +1335,8 @@ function renderBalanceBox(el, dayIncomeItems, monthIncomeItems, dayExpenseItems,
 }
 
 function renderClosure() {
-  const today = new Date().toISOString().slice(0, 10);
-  const yearMonth = today.slice(0, 7);
+  const today = byId('closure-day')?.value || new Date().toISOString().slice(0, 10);
+  const yearMonth = byId('closure-month')?.value || today.slice(0, 7);
   const closureCaption = byId('closure-caption');
   if (closureCaption) closureCaption.textContent = `Mostrando cierre del día ${today} y acumulado del mes ${yearMonth}.`;
 
@@ -1290,10 +1363,12 @@ function renderClosure() {
 }
 
 byId('refresh-closure-btn')?.addEventListener('click', renderClosure);
+['closure-day', 'closure-month'].forEach((id) => byId(id)?.addEventListener('change', renderClosure));
+byId('report-month')?.addEventListener('change', renderReports);
 
 // -------- Reportes --------
 function getCurrentYearMonth() {
-  return new Date().toISOString().slice(0, 7);
+  return byId('report-month')?.value || new Date().toISOString().slice(0, 7);
 }
 
 function serviceMonthlyReport() {
@@ -1478,14 +1553,18 @@ function renderReports() {
     : 'Sin movimientos del personal.';
 
   const cash = cashConsolidatedMonthlyReport();
+  const allRegisterIncome = collectMembershipPayments(['rutina', 'maquinas', 'bailes', 'maquina_baile', 'baile_jumping', '3servicios']);
+  const allSalesIncome = getStored(STORAGE_KEYS.SALES).map((s) => ({ amount: Number(s.final || 0), method: s.method || 'cash', date: s.date || '' }));
+  const historical = sumByMethod([...allRegisterIncome, ...allSalesIncome]);
   cashSummary.innerHTML = `
     <div class="alert-item"><strong>Rutina:</strong> Total S/ ${cash.rutina.total.toFixed(2)} · Efectivo S/ ${cash.rutina.cash.toFixed(2)} · Yape S/ ${cash.rutina.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Máquinas:</strong> Total S/ ${cash.maquinas.total.toFixed(2)} · Efectivo S/ ${cash.maquinas.cash.toFixed(2)} · Yape S/ ${cash.maquinas.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Baile + jumping:</strong> Total S/ ${cash.baileJumping.total.toFixed(2)} · Efectivo S/ ${cash.baileJumping.cash.toFixed(2)} · Yape S/ ${cash.baileJumping.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Ventas:</strong> Total S/ ${cash.ventas.total.toFixed(2)} · Efectivo S/ ${cash.ventas.cash.toFixed(2)} · Yape S/ ${cash.ventas.yape.toFixed(2)}</div>
-    <div class="alert-item"><strong>Ingresos totales:</strong> S/ ${cash.ingresosTotal.total.toFixed(2)} · Efectivo S/ ${cash.ingresosTotal.cash.toFixed(2)} · Yape S/ ${cash.ingresosTotal.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Ingresos totales (mes seleccionado):</strong> S/ ${cash.ingresosTotal.total.toFixed(2)} · Efectivo S/ ${cash.ingresosTotal.cash.toFixed(2)} · Yape S/ ${cash.ingresosTotal.yape.toFixed(2)}</div>
     <div class="alert-item"><strong>Egresos personal:</strong> S/ ${cash.egresosPersonal.total.toFixed(2)} · Efectivo S/ ${cash.egresosPersonal.cash.toFixed(2)}</div>
     <div class="alert-item"><strong>Neto caja:</strong> S/ ${cash.neto.total.toFixed(2)} · Efectivo S/ ${cash.neto.cash.toFixed(2)} · Yape S/ ${cash.neto.yape.toFixed(2)}</div>
+    <div class="alert-item"><strong>Ingreso histórico acumulado (registro + ventas):</strong> S/ ${historical.total.toFixed(2)} · Efectivo S/ ${historical.cash.toFixed(2)} · Yape S/ ${historical.yape.toFixed(2)}</div>
   `;
 }
 
@@ -1639,6 +1718,9 @@ renderExpiryAlerts();
 renderStaffTable();
 renderStaffByWorker();
 if (byId('saleDate')) byId('saleDate').value = new Date().toISOString().slice(0, 10);
+if (byId('closure-day')) byId('closure-day').value = new Date().toISOString().slice(0, 10);
+if (byId('closure-month')) byId('closure-month').value = new Date().toISOString().slice(0, 7);
+if (byId('report-month')) byId('report-month').value = new Date().toISOString().slice(0, 7);
 if (byId('pay-filter-day')) byId('pay-filter-day').value = new Date().toISOString().slice(0, 10);
 if (byId('pay-filter-month')) byId('pay-filter-month').value = new Date().toISOString().slice(0, 7);
 renderClosure();
