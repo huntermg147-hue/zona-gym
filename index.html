@@ -7,8 +7,25 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="container">
+    <section id="login-screen" class="container">
+      <section class="card form-card">
+        <h2>Ingreso al sistema</h2>
+        <p class="muted">Usuarios simulados: dueño/admin/entrenador/alumno</p>
+        <form id="login-form" novalidate>
+          <div class="grid">
+            <label>Usuario<input type="text" id="login-username" required /></label>
+            <label>Contraseña<input type="password" id="login-password" required /></label>
+          </div>
+          <p id="login-error" class="error-message hidden" role="alert"></p>
+          <div class="actions"><button type="submit">Ingresar</button></div>
+        </form>
+      </section>
+    </section>
+
+    <main id="app-root" class="container hidden">
       <section class="hero">
+        <p id="current-role-badge" class="badge">ROL: -</p>
+        <div id="role-metrics" class="closure-grid"></div>
         <p class="badge">PLANIFICADOR FITNESS</p>
         <h1>Zona Gym Pro</h1>
         <p>Sistema con 8 secciones: plan nutricional, registro, ventas, pagos pendientes, búsqueda, personal, reportes y cierre de caja.</p>
@@ -24,6 +41,10 @@
         <button class="tab-btn" type="button" data-target="reports-section">Reportes</button>
         <button class="tab-btn" type="button" data-target="closure-section">Cierre de caja</button>
         <button class="tab-btn" type="button" data-target="payments-filter-section">Filtro de pagos</button>
+        <button class="tab-btn" type="button" data-target="vip-config-section">Configuración VIP</button>
+        <button class="tab-btn" type="button" data-target="trainer-section">Panel entrenador</button>
+        <button class="tab-btn" type="button" data-target="student-section">Panel alumno</button>
+        <button type="button" id="logout-btn">Cerrar sesión</button>
       </nav>
 
       <section id="nutrition-section" class="app-section">
@@ -118,6 +139,9 @@
               <label>Medio de pago del adelanto<select id="registerPayMethod"><option value="cash">Efectivo</option><option value="yape">Yape</option></select></label>
               <label>Total a pagar (S/)<input type="number" id="totalPay" readonly /></label>
               <label>Saldo (S/)<input type="number" id="balance" readonly /></label>
+              <label>Tipo de membresía<select id="membershipType"><option value="normal">Normal</option><option value="vip">VIP</option></select></label>
+              <label>Inicio VIP<input type="date" id="vipStartDate" /></label>
+              <label>Fin VIP<input type="date" id="vipEndDate" /></label>
             </div>
             <p id="register-error" class="error-message hidden" role="alert"></p>
             <div class="actions">
@@ -366,6 +390,32 @@
         <section class="card">
           <h3>Detalle ventas</h3>
           <div id="pay-filter-sales-list" class="list-stack muted">Sin resultados.</div>
+        </section>
+      </section>
+
+
+      <section id="vip-config-section" class="app-section hidden">
+        <section class="card form-card">
+          <h2>Configuración VIP</h2>
+          <div class="grid">
+            <label><input type="checkbox" id="vip-auto-promo" /> Activar VIP automático por promoción</label>
+            <label>Regla promoción<select id="vip-promo-rule"><option value="3x1">3 meses renovados = 1 mes VIP</option></select></label>
+          </div>
+          <p class="muted">Solo dueño puede editar esta configuración.</p>
+        </section>
+      </section>
+
+      <section id="trainer-section" class="app-section hidden">
+        <section class="card">
+          <h2>Panel del entrenador</h2>
+          <div id="trainer-students" class="list-stack muted">Sin alumnos activos.</div>
+        </section>
+      </section>
+
+      <section id="student-section" class="app-section hidden">
+        <section class="card">
+          <h2>Panel del alumno</h2>
+          <div id="student-panel" class="list-stack muted">Inicia sesión como alumno para ver tu panel.</div>
         </section>
       </section>
 

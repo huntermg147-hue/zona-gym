@@ -929,7 +929,10 @@ function currentRegisterData() {
     paid,
     balance,
     paymentMethod: byId('registerPayMethod').value,
-    paymentHistory: paid > 0 ? [{ amount: paid, method: byId('registerPayMethod').value, date: byId('startDate').value }] : []
+    paymentHistory: paid > 0 ? [{ amount: paid, method: byId('registerPayMethod').value, date: byId('startDate').value }] : [],
+    membershipType: byId('membershipType')?.value || 'normal',
+    vipStartDate: byId('vipStartDate')?.value || '',
+    vipEndDate: byId('vipEndDate')?.value || ''
   };
 }
 
@@ -974,7 +977,7 @@ function renderActiveTable() {
     }
     rows.forEach((r) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || 'Sin número'}</td><td>${r.service}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td>${formatPayMethod(r.paymentMethod || 'cash')}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
+      tr.innerHTML = `<td>${r.fullName}</td><td>${r.phone || r.dni || 'Sin número'}</td><td>${r.service} ${r.membershipType === 'vip' ? '· VIP' : ''}</td><td>${r.startDate}</td><td>${r.endDate}</td><td>S/ ${r.total.toFixed(2)}</td><td>S/ ${r.balance.toFixed(2)}</td><td>${formatPayMethod(r.paymentMethod || 'cash')}</td><td><button class="mini-btn" data-delete-active="${r.id}" type="button">Borrar</button></td>`;
       body.appendChild(tr);
     });
   };
@@ -1018,6 +1021,9 @@ registerForm.addEventListener('submit', (e) => {
   byId('advancePaid').value = '0';
   byId('customPrice').value = '';
   byId('registerPayMethod').value = 'cash';
+  if (byId('membershipType')) byId('membershipType').value = 'normal';
+  if (byId('vipStartDate')) byId('vipStartDate').value = '';
+  if (byId('vipEndDate')) byId('vipEndDate').value = '';
   refreshRegisterCalc();
 
   renderActiveTable();
