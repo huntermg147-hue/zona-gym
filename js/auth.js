@@ -88,6 +88,8 @@ export function initAuth() {
     setCurrentAuthUser(user);
     loginScreen?.classList.add('hidden');
     appRoot?.classList.remove('hidden');
+    if (userInput) userInput.value = '';
+    if (passInput) passInput.value = '';
     applyRoleUi(user);
   };
 
@@ -96,13 +98,14 @@ export function initAuth() {
 
   loginForm?.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (!loginScreen || loginScreen.classList.contains('hidden')) return;
     const username = userInput?.value?.trim().toLowerCase();
     const password = passInput?.value || '';
     const user = mockUsers.find((u) => u.username === username && u.password === password);
 
     if (!user) {
       if (errorEl) {
-        errorEl.textContent = 'Usuario o contraseña inválidos.';
+        errorEl.textContent = 'Usuario o contraseña inválidos. Revisa: dueno/admin/entrenador/alumno/alumnovip con clave 1234.';
         errorEl.classList.remove('hidden');
       }
       return;
